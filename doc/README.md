@@ -100,6 +100,12 @@ Infrastructure --> Domain
 - 运行时测试通过后，类型检查仍发现 Shape 与 ShapeContainer 直接比较的静态类型错误，改用 Object.is 判断身份；同时将测试源码纳入类型检查，避免仅通过 tsx 运行而遗漏类型问题。
 - 本阶段尚未实现命令、REPL、撤销重做和 SVG 读写，未提前声称编辑器功能完成。
 
+### 调试配置补充
+
+- 添加 `.vscode/launch.json`，提供“调试 SVG CLI”配置，通过 `node --import tsx` 启动 TypeScript 入口，并使用集成终端保留交互输入能力。
+- 验证配置 JSON 可解析、入口路径存在，并运行同一启动命令确认加载成功；未自动操作 VS Code 验证断点命中。
+- 该提交仅补充开发调试工具与说明，不改变领域模型。
+
 ## 3. 一致性自查
 
 - 当前已实现 `src/main.ts`、`src/cli/`、`src/domain/` 和 `tests/`，与分步计划一致；目标目录尚未全部建立。
