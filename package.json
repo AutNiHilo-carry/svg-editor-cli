@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "check": "tsc -p tsconfig.json --noEmit",
-    "cli": "tsx src/main.ts"
+    "check": "tsc -p tsconfig.test.json",
+    "cli": "tsx src/main.ts",
+    "test": "tsx --test tests/*.test.ts"
   },
   "engines": {
     "node": ">=22"
