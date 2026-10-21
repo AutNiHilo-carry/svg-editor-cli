@@ -79,7 +79,10 @@ export abstract class Shape {
   }
 
   private parseNumber(value: string | number): number {
-    if (typeof value === 'string' && !value.trim()) throw new Error('value must be a finite number');
+    // Number() 还会接受 0x10、0b10 等 JS 进制字面量，不能直接作为坐标校验。
+    if (typeof value === 'string' && !/^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(value.trim())) {
+      throw new Error('value must be a finite number');
+    }
     const numeric = Number(value);
     if (!Number.isFinite(numeric)) throw new Error('value must be a finite number');
     return numeric;

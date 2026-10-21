@@ -127,3 +127,21 @@ test('画布尺寸验证与容器查询', () => {
   assert.throws(() => canvas.requireGroup('missing'), /no such container: missing/);
   assert.throws(() => canvas.requireGroup('r'), /not a container: r/);
 });
+
+test('数值属性拒绝进制字面量并保持状态，仍支持十进制浮点与指数', () => {
+  const rect = new Rect('r', 1, 2, 3, 4);
+  rect.setAttribute('stroke-width', 2);
+  const before = rect.attributes;
+  for (const value of ['0x10', '0XFF', '0b10', '0o10', ' ', '1e309', '12px', '1_000']) {
+    for (const name of ['x', 'width', 'stroke-width']) {
+      assert.throws(() => rect.setAttribute(name, value), /finite number/, `${name} 不应接受 ${value}`);
+      assert.deepEqual(rect.attributes, before);
+    }
+  }
+  rect.setAttribute('x', ' -1.25e+2 ');
+  rect.setAttribute('y', '+.5');
+  rect.setAttribute('width', '10.');
+  rect.setAttribute('height', '2E-1');
+  rect.setAttribute('stroke-width', '0.25');
+  assert.deepEqual(rect.attributes, { x: -125, y: 0.5, width: 10, height: 0.2, 'stroke-width': 0.25 });
+});
