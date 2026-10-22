@@ -1,4 +1,5 @@
 import { ShapeCollection } from './ShapeCollection.js';
+import { FiniteNumber } from './FiniteNumber.js';
 import type { ShapeContainer } from './ShapeContainer.js';
 
 export abstract class Shape {
@@ -25,7 +26,7 @@ export abstract class Shape {
 
   public setAttribute(name: string, value: string | number): void {
     if (this.#geometry.has(name)) {
-      const numeric = this.parseNumber(value);
+      const numeric = FiniteNumber.parse(value);
       this.validateNumber(name, numeric);
       this.#geometry.set(name, numeric);
       return;
@@ -35,7 +36,7 @@ export abstract class Shape {
       return;
     }
     if (name === 'stroke-width') {
-      const numeric = this.parseNumber(value);
+      const numeric = FiniteNumber.parse(value);
       if (numeric < 0) throw new Error('stroke-width must be nonnegative');
       this.#styles.set(name, numeric);
       return;
@@ -76,16 +77,6 @@ export abstract class Shape {
     const value = this.#geometry.get(name);
     if (value === undefined) throw new Error(`unknown coordinate: ${name}`);
     return value;
-  }
-
-  private parseNumber(value: string | number): number {
-    // Number() 还会接受 0x10、0b10 等 JS 进制字面量，不能直接作为坐标校验。
-    if (typeof value === 'string' && !/^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(value.trim())) {
-      throw new Error('value must be a finite number');
-    }
-    const numeric = Number(value);
-    if (!Number.isFinite(numeric)) throw new Error('value must be a finite number');
-    return numeric;
   }
 
   private validateNumber(name: string, value: number): void {
