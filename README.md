@@ -24,7 +24,7 @@ Windows PowerShell 若限制执行 npm.ps1，可使用 `npm.cmd` 代替 `npm`。
 
 ## 当前命令
 
-已支持 `init`、`canvas`、`create`、`move`、`scale`、`set`、`delete` 和 `help`。输入 `help` 查看参数和六种图形的创建语法。
+已支持 `init`、`canvas`、`create`、`move`、`scale`、`set`、`delete`、`group`、`ungroup`、`addto`、`front`、`back`、`undo`、`redo` 和 `help`。输入 `help` 查看参数和六种图形的创建语法。
 
 ```text
 init 400 300
@@ -34,6 +34,8 @@ create text label 25 55 "开始" in node
 move node 20 10
 scale node 1.5
 set label text "处理数据"
+undo
+redo
 canvas
 ```
 
@@ -43,5 +45,9 @@ canvas
 Get-Content -Encoding utf8 commands.txt | npm.cmd run cli
 ```
 
-六种图形、嵌套容器、ID 约束以及基础编辑已实现。分组操作、撤销重做、SVG 读写和 tree/show 尚未实现。
+每条成功编辑命令对应一个撤销单元，包括整次分组或子树删除。undo 后成功执行新编辑会清空 redo；失败操作、help 和画布查询保留历史。成功 init 或修改画布尺寸会清空历史并阻止 undo/redo，直到下一条成功编辑。
+
+`group` 按原文档遍历顺序收编节点，不按参数顺序；跨父节点时放入最近公共父容器。根级容器禁止 ungroup，嵌套容器解组后子节点占据原容器位置。`front` 移到同级末尾（SVG 后绘制），`back` 移到同级开头。
+
+SVG 读写和 tree/show 尚未实现。
 架构方案和开发记录见 [doc/README.md](doc/README.md)。

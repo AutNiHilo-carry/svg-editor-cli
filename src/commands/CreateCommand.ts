@@ -1,18 +1,18 @@
 import type { EditorSession } from '../application/EditorSession.js';
-import type { Command } from './Command.js';
+import { EditCommand } from './EditCommand.js';
 import type { CommandArguments } from './CommandArguments.js';
 import type { ShapeFactory } from './ShapeFactory.js';
 
-export class CreateCommand implements Command {
+export class CreateCommand extends EditCommand {
   public static readonly syntax = 'create <type> <id> [params…] [in <containerId>]';
 
   public constructor(
-    private readonly session: EditorSession,
+    session: EditorSession,
     private readonly factory: ShapeFactory,
     private readonly args: CommandArguments,
-  ) {}
+  ) { super(session); }
 
-  public execute(): string {
+  protected override apply(): string {
     const canvas = this.session.requireCanvas();
     this.args.expect(2, Number.MAX_SAFE_INTEGER);
     const hasContainer = this.args.length >= 4

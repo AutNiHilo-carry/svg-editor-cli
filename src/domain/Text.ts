@@ -1,4 +1,5 @@
 import { Shape } from './Shape.js';
+import { ShapeState } from './ShapeState.js';
 
 export class Text extends Shape {
   public readonly type = 'text';
@@ -10,6 +11,15 @@ export class Text extends Shape {
   }
 
   public get content(): string { return this.#content; }
+
+  public override captureState(): ShapeState {
+    const base = super.captureState();
+    const content = this.#content;
+    return new ShapeState(() => {
+      base.restore();
+      this.#content = content;
+    });
+  }
 
   public override get attributes(): Readonly<Record<string, string | number>> {
     return Object.freeze({ ...super.attributes, text: this.#content });

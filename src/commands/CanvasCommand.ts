@@ -11,7 +11,7 @@ export class CanvasCommand implements Command {
     const canvas = this.session.requireCanvas();
     if (this.args.length === 0) return `canvas ${canvas.width}x${canvas.height}`;
     this.args.expect(2);
-    canvas.resize(this.args.number(0), this.args.number(1));
+    this.session.resizeCanvas(this.args.number(0), this.args.number(1));
     return `canvas resized to ${canvas.width}x${canvas.height}`;
   }
 }

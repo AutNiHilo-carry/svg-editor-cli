@@ -1,5 +1,6 @@
 import { ShapeCollection } from './ShapeCollection.js';
 import { FiniteNumber } from './FiniteNumber.js';
+import { ShapeState } from './ShapeState.js';
 import type { ShapeContainer } from './ShapeContainer.js';
 
 export abstract class Shape {
@@ -63,6 +64,17 @@ export abstract class Shape {
   }
 
   public walk(): readonly Shape[] { return [this]; }
+
+  public captureState(): ShapeState {
+    const geometry = new Map(this.#geometry);
+    const styles = new Map(this.#styles);
+    return new ShapeState(() => {
+      this.#geometry.clear();
+      this.#styles.clear();
+      for (const [key, value] of geometry) this.#geometry.set(key, value);
+      for (const [key, value] of styles) this.#styles.set(key, value);
+    });
+  }
 
   protected translateAxes(dx: number, dy: number, xKeys: readonly string[], yKeys: readonly string[]): Map<string, number> {
     const values = new Map(this.#geometry);
