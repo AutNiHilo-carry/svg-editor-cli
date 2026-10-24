@@ -10,7 +10,7 @@ import { InitCommand } from './InitCommand.js';
 import { MoveCommand } from './MoveCommand.js';
 import { ScaleCommand } from './ScaleCommand.js';
 import { SetCommand } from './SetCommand.js';
-import type { ShapeFactory } from './ShapeFactory.js';
+import type { ShapeFactory } from '../domain/ShapeFactory.js';
 import { AddToCommand } from './AddToCommand.js';
 import { BackCommand } from './BackCommand.js';
 import { FrontCommand } from './FrontCommand.js';
@@ -18,6 +18,10 @@ import { GroupCommand } from './GroupCommand.js';
 import { UngroupCommand } from './UngroupCommand.js';
 import { UndoCommand } from './UndoCommand.js';
 import { RedoCommand } from './RedoCommand.js';
+import { ReadCommand } from './ReadCommand.js';
+import { SaveCommand } from './SaveCommand.js';
+import { TreeCommand } from './TreeCommand.js';
+import { ShowCommand } from './ShowCommand.js';
 
 export class CommandDispatcher {
   readonly #commands = new Map<string, { syntax: string; build: (args: CommandArguments) => Command }>();
@@ -37,6 +41,10 @@ export class CommandDispatcher {
     this.register('back', BackCommand.syntax, args => new BackCommand(session, args));
     this.register('undo', UndoCommand.syntax, args => new UndoCommand(session, args));
     this.register('redo', RedoCommand.syntax, args => new RedoCommand(session, args));
+    this.register('read', ReadCommand.syntax, args => new ReadCommand(session, args));
+    this.register('save', SaveCommand.syntax, args => new SaveCommand(session, args));
+    this.register('tree', TreeCommand.syntax, args => new TreeCommand(session, args));
+    this.register('show', ShowCommand.syntax, args => new ShowCommand(session, args));
     this.register('help', HelpCommand.syntax, args => new HelpCommand(args, [...this.#commands.values()].map(item => item.syntax)));
   }
 

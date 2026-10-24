@@ -30,7 +30,7 @@ export class ShapeCollection {
       if (root.parent === null) break;
       root = root.parent;
     }
-    const ids = new Set(root.walk().filter(node => !moving.has(node)).map(node => node.id));
+    const ids = new Set([...(root.reservedIds ?? []), ...root.walk().filter(node => !moving.has(node)).map(node => node.id)]);
     for (const node of subtree) {
       if (ids.has(node.id)) throw new Error(`id already exists: ${node.id}`);
       ids.add(node.id);

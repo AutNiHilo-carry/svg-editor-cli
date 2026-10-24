@@ -6,15 +6,13 @@ import type { ShapeState } from './ShapeState.js';
 
 export class CanvasSnapshot {
   readonly #canvas: Canvas;
-  readonly #width: number;
-  readonly #height: number;
+  readonly #canvasState: ShapeState;
   readonly #states: readonly ShapeState[];
   readonly #layout: readonly { container: ShapeContainer; children: readonly Shape[] }[];
 
   public constructor(canvas: Canvas) {
     this.#canvas = canvas;
-    this.#width = canvas.width;
-    this.#height = canvas.height;
+    this.#canvasState = canvas.captureState();
     const shapes = canvas.walk();
     this.#states = shapes.map(shape => shape.captureState());
     this.#layout = [canvas, ...shapes.filter(shape => shape instanceof Group)]
@@ -35,6 +33,6 @@ export class CanvasSnapshot {
     for (const { container, children } of this.#layout) {
       for (const child of children) container.insert(child);
     }
-    this.#canvas.resize(this.#width, this.#height);
+    this.#canvasState.restore();
   }
 }

@@ -9,6 +9,7 @@ export abstract class Shape {
   readonly #geometry: Map<string, number>;
   readonly #sizes: ReadonlySet<string>;
   readonly #styles = new Map<string, string | number>();
+  readonly #imported = new Map<string, string>();
 
   protected constructor(id: string, geometry: Record<string, number>, sizes: readonly string[] = []) {
     if (!id || /\s/.test(id)) throw new Error('id must be nonempty and contain no whitespace');
@@ -20,9 +21,26 @@ export abstract class Shape {
 
   public get id(): string { return this.#id; }
   public get parent(): ShapeContainer | null { return ShapeCollection.parentOf(this); }
+  public get children(): readonly Shape[] { return []; }
+  public get content(): string | undefined { return undefined; }
 
   public get attributes(): Readonly<Record<string, string | number>> {
-    return Object.freeze(Object.fromEntries([...this.#geometry, ...this.#styles]));
+    return Object.freeze(Object.fromEntries([...this.#imported, ...this.#geometry, ...this.#styles]));
+  }
+
+  public get svgAttributes(): Readonly<Record<string, string | number>> { return this.attributes; }
+
+  public get summary(): string {
+    return Object.entries(this.svgAttributes).map(([key, value]) => `${key}=${value}`).join(' ');
+  }
+
+  public importAttribute(name: string, value: string): void {
+    if (name === 'id' || name === 'text') throw new Error(`reserved attribute: ${name}`);
+    if (this.#geometry.has(name) || ['fill', 'stroke', 'stroke-width'].includes(name)) {
+      this.setAttribute(name, value);
+    } else {
+      this.#imported.set(name, value);
+    }
   }
 
   public setAttribute(name: string, value: string | number): void {
@@ -68,11 +86,14 @@ export abstract class Shape {
   public captureState(): ShapeState {
     const geometry = new Map(this.#geometry);
     const styles = new Map(this.#styles);
+    const imported = new Map(this.#imported);
     return new ShapeState(() => {
       this.#geometry.clear();
       this.#styles.clear();
+      this.#imported.clear();
       for (const [key, value] of geometry) this.#geometry.set(key, value);
       for (const [key, value] of styles) this.#styles.set(key, value);
+      for (const [key, value] of imported) this.#imported.set(key, value);
     });
   }
 

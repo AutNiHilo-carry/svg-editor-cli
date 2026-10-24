@@ -4,7 +4,7 @@
 
 ### 模块划分
 
-以下为目标结构；当前已建立入口、CLI、编辑命令、文档会话、历史管理、领域模型与测试，基础设施随功能逐步加入。
+以下结构均已建立；按初始化、领域模型、CLI、历史与层级、SVG 读写逐步提交。
 
 | 模块 | 职责 |
 | --- | --- |
@@ -44,8 +44,8 @@ Infrastructure --> Domain
 - **Command（已实现）**：每条基础操作封装为独立命令类，由 `CommandDispatcher` 创建并执行。编辑命令继承 `EditCommand`，由会话和 `CommandHistory` 调用 `UndoableAction` 的 execute/undo/redo。成功执行后才入栈并清空 redo，失败操作不改历史；文档操作在成功后建立屏障，查询不入栈。
 - **Memento（历史实现）**：`SnapshotEdit` 保存编辑前后的 `CanvasSnapshot`；图形通过多态 `captureState()` 返回封装的 `ShapeState`，文本类补充自身内容恢复逻辑。快照记录实际对象、各容器子节点顺序和属性，恢复时先清空相关容器，再重建树，不需要按标签分派，也不依赖反向运算。修订原逐命令保存差量的设想，优先保证精确恢复和原子性，代价为每条历史占用 O(文档大小) 内存；本阶段不优化为差量或持久化历史。
 - **Composite（已实现领域部分）**：抽象图形 `Shape` 统一暴露移动、缩放、设置属性等操作，`Group` 重写 `walk()` 提供包含自身的子树。移动与缩放通过此多态遍历作用于全部子孙；叶子类实现各自的坐标平移，无按标签分派操作。
-- **Factory（已实现 CLI 部分）**：`commands/ShapeFactory` 集中按类型名创建六种内置图形，并处理 CLI 参数个数、数值和可选样式。暂不实现插件系统。修订原“SVG 解码也直接调用该工厂”的方案：当前工厂依赖命令参数，不适合让基础设施直接引用；读写阶段应提取公共图形创建接口或注册机制，使 CLI 和 XML 适配器复用，同时继续遵守依赖方向。
-- **依赖倒置（待实现）**：应用定义文档存储端口，文件与 XML 实现位于基础设施，由入口注入。
+- **Factory 与适配器（已实现）**：`domain/ShapeFactory` 集中按类型名创建六种内置图形，依赖领域 `ShapeInput` 接口。命令层的 `CommandShapeInput` 适配位置参数和引号校验；基础设施的 `XmlShapeInput` 适配 XML 属性和缺省值。两种入口复用同一类型注册表。完成了此前工厂从命令层提取的方案修订，暂不实现插件加载。
+- **依赖倒置（已实现）**：应用定义 `DocumentStore`，`FileDocumentStore` 与 `SvgCodec` 位于基础设施；main 注入文件实现，应用和命令不引用具体文件系统或 XML 库。
 
 仅允许两处按名字分派：命令分发器和图形工厂。这两处标为后续插件化阶段的待重构项；几何操作、属性设置和展示由对象多态完成，不散布 `switch(tag)`。
 
@@ -78,7 +78,7 @@ Infrastructure --> Domain
 - 普通 g 的公共样式设在容器上，遵循 SVG 继承；几何 move/scale 递归作用于子节点。scale 同时缩放位置与尺寸，不擅自扩大到 stroke-width 等样式。
 - 顶层 g 禁止 ungroup。addto/group 必须预先检查祖先关系，防止循环和重复操作。
 - 跨父容器 group 的顺序与位置暂约定：按操作前文档遍历顺序排列所选节点，新组插入它们最近公共祖先下、第一个被选分支之前；同父场景占据第一个被选节点的位置。实现和测试必须同时验证该约定。
-- 外部 SVG 的支持范围在读写阶段明确；特别是 transform、未知标签、重复 id 和不支持的属性，不能静默丢弃后声称无损读回。作业开头有 transform 示例，因此应优先研究 translate/scale 的支持。
+- 外部 SVG 仅接受六种内置图形，未知标签和重复 id 报错，DOCTYPE 拒绝。几何值支持无单位数值和 px，百分比等其他单位拒绝。根 viewBox 和图形 transform/字体等属性原样保留，编辑作用于本地坐标，不展开变换矩阵；修改画布尺寸重置 viewBox。注释、原始排版和属性顺序不保证保留，不宣称支持任意 SVG 的无损往返。导入属性不会扩大 set 白名单。
 
 ## 2. 过程记录
 
@@ -88,7 +88,7 @@ Infrastructure --> Domain
 - 初始目录只有需求 Markdown，没有 Git 仓库或实现代码。
 - 建立 TypeScript 严格模式配置、CLI 启动类、构建脚本和忽略规则。
 - 在写实现前记录模块职责、依赖方向和待确认语义，避免先完成全部代码再补造过程记录。
-- 发现流程图版本 A 的元素和 create 命令实际为 9，原示例写为 8；后续计数以真实树节点数为准，不含 svg 根。
+- 初次人工计数误以为流程图版本 A 有 9 个元素；后续实际回放确认是 8 个，原需求计数正确，读写阶段已记录纠正。元素计数不含 svg 根。
 
 后续每个阶段补充实际遇到的问题、验证方式及修订决定，不预先填写未发生的工作。
 
@@ -134,18 +134,28 @@ Infrastructure --> Domain
 - SnapshotEdit 额外保护执行失败的原子性：即使编辑过程已经部分修改后抛错，也恢复操作前状态；通过模拟中途故障测试确认，已有 redo 不丢失。
 - 新增 8 项历史与结构测试，累计 21 项全部通过；类型检查和构建通过。读写屏障目前落实 init/canvas，read/save 待下一阶段接入同一规则。
 
+### 2026-10-25：SVG 读写与结构显示
+
+- 添加 read/save/tree/show，至此接齐需求全部命令。DocumentInspector 生成结构树及属性详情，不直接输出终端；图形通过 children/content/summary 等多态接口提供信息，不按图形标签选择展示或序列化逻辑。
+- 将图形工厂移入 domain，提取 ShapeInput，由 CommandShapeInput 与 XmlShapeInput 分别适配 CLI 和 XML；消除原 CLI 工厂阻碍基础设施复用的问题，类型名注册仍集中于一处。
+- 使用 @xmldom/xmldom 解析和序列化，处理属性与子文本转义。读入前扫描全部已有 ID，自动补名避开后续元素的显式名称；重复 ID 和不支持的标签明确拒绝，不先输出部分警告或替换文档。
+- FileDocumentStore 先将 SVG 写入目标同目录的独占临时文件，完成后再重命名替换；失败清理临时文件并报告 cannot write file。应用只在读写全部成功后变更默认路径并建立历史屏障；无参数 save 复用最近成功路径，init 清除路径。
+- 导入保留 transform、字体、viewBox 等属性。发现快照恢复调用 resize 会清除导入 viewBox，改为由 Canvas 自身封装根属性与尺寸快照，并补充导入后 undo、非法编辑和保存读回的回归验证。
+- 真实回放确认流程图实际为 8 个元素，纠正最初人工误数为 9 的判断；原需求该处正确。Windows PowerShell 默认管道编码曾使中文变成问号，显式设置 UTF-8 后重新生成例图；另用独立 Node 进程回放验证“开始”和“处理数据 v2”保真。
+- 添加 examples 下的外部 SVG、完整流程图脚本及生成结果。累计 29 项测试通过，类型检查和构建通过；完整脚本已实际运行并完成保存再读回。浏览器视觉检查尚未执行，不将 XML 往返测试等同于视觉验证。
+
 ## 3. 一致性自查
 
-- 当前已实现 `src/main.ts`、`src/cli/`、`src/commands/`、`src/application/`、`src/domain/` 和 `tests/`，基础设施尚未建立，符合分步计划；工厂复用和历史快照方案的调整已记入修订。
-- 抽样检查：CLI 引用 commands；commands 引用 application/domain；application 的 SnapshotEdit 引用 domain/CanvasSnapshot，历史接口 UndoableAction 属于 application，无反向引用 commands；domain 无外层依赖，命令类无 node: 终端或文件引用。依赖方向符合当前方案。
-- Composite、Command、Memento、历史管理及 CLI 工厂已落地；存储端口尚未实现。
+- 实际模块包括 src/main.ts、cli、commands、application、domain、infrastructure 和 tests，与方案一致；增加 examples 用于回放与预览。工厂迁移、历史快照和外部 SVG 支持范围均已记录修订。
+- 抽样检查：CLI 引用 commands；commands 引用 application/domain；application 的 SnapshotEdit 引用 domain/CanvasSnapshot，DocumentStore 属于 application；infrastructure 实现该端口并使用 domain/ShapeFactory，不引用 commands；domain 无外层依赖，命令类无 node: 终端或文件引用。依赖方向符合方案。
+- Command、Composite、Memento、工厂及存储端口均已落地；按名字分派仍仅集中在 CommandDispatcher 和 ShapeFactory 两个注册表，后续插件化时待重构。
 - 完成实现后需重新检查实际目录与 import 关系，并在此记录偏差和修订。
 
 ## 4. 质量保证手段
 
 初始化阶段执行类型检查、构建及 CLI 启动检查；这些只能证明骨架可构建启动，不能证明编辑器功能完成。
 
-本阶段实际验证结果（2026-10-25）：`npm.cmd run check`、`npm.cmd run build`、`npm.cmd run cli` 均成功，CLI 输出当前骨架状态。依赖安装成功并生成 package-lock.json，供后续使用 `npm ci` 复现。
+初始化阶段实际验证结果（2026-10-25）：`npm.cmd run check`、`npm.cmd run build`、`npm.cmd run cli` 均成功，当时 CLI 输出骨架状态。依赖安装成功并生成 package-lock.json，供后续使用 `npm ci` 复现。
 
 领域模型阶段验证：通过 `npm.cmd test` 验证嵌套图形移动缩放、全局 ID 冲突、重新归属与排序、循环拒绝、数值与属性白名单、失败原子性、画布查询；共 7 项行为测试。`npm.cmd run check` 同时检查生产代码和测试代码，另执行构建验证。
 
@@ -153,11 +163,12 @@ CLI 阶段测试累计 13 项（含后补数值校验回归测试）。脚本回
 
 历史与结构阶段累计 21 项测试通过。新增测试逐条比较完整的节点遍历顺序、父级、同级索引和属性，完成整段命令的全部撤销与全部重做；特别覆盖浮点精确恢复、缺省样式撤销、子树删除、跨父分组、空容器解组、重设归属和 z-order。另验证失败命令不清空 redo、成功新编辑清空 redo、文档屏障以及中途故障回滚。
 
-后续计划：
+读写阶段累计 29 项测试通过。新增六种图形和层级的 XML 往返、转义、自动 ID 与重复 ID、坏文件拒绝、导入属性与 viewBox 恢复、真实文件失败原子性、read/save 历史屏障、tree/show 及两份需求样例回放。完整流程图实际保存读回均为 8 个元素，中文内容由自动化测试确认。
 
-1. 验证六种图形的几何操作、属性白名单、唯一 id、非法参数及失败原子性。
-2. 验证嵌套容器、跨父分组、循环拒绝、解组顺序和同级 z-order。
-3. 验证每条编辑命令的撤销重做、新编辑清空 redo、文档操作的历史屏障。
-4. 验证 SVG 保存读回、XML 转义、缺 id 自动补全及与已有 id 的冲突规避。
-5. 回放作业的典型会话和流程图案例，并用浏览器查看保存结果。
-6. 最终检查提交历史、远程推送和 final 标签；当前阶段不创建 final 标签。
+验收情况与剩余事项：
+
+1. 已验证六种图形、白名单、唯一 id、非法参数、失败原子性、嵌套与结构编辑。
+2. 已验证编辑历史、新编辑清空 redo、四类文档操作屏障、查询不影响历史。
+3. 已验证 SVG 往返、转义、补 ID、文件错误及完整流程图回放。
+4. 浏览器视觉检查尚未执行；可打开 examples/flowchart.svg 检查实际渲染。
+5. 远程推送和 final 标签仍需完成；当前功能提交不创建 final 标签。

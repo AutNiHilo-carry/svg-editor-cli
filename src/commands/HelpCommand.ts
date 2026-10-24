@@ -20,8 +20,8 @@ export class HelpCommand implements Command {
       '以上 create 类型均支持尾缀 in <containerId>。',
       '# 开头的整行为注释；双引号内支持 \\" 和 \\\\ 转义。',
       'Ctrl+C 或输入结束（EOF）退出。',
-      '一条编辑命令对应一次 undo；新编辑清空 redo；init 和 canvas 修改尺寸后建立历史屏障。',
-      '后续阶段：read / save / tree / show。',
+      '一条编辑命令对应一次 undo；新编辑清空 redo；init/read/save 和 canvas 修改尺寸后建立历史屏障。',
+      '内置六种图形；box 与插件系统不属于本阶段。',
     ].join('\n');
   }
 }

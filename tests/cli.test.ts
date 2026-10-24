@@ -4,7 +4,7 @@ import test from 'node:test';
 import { EditorSession } from '../src/application/EditorSession.js';
 import { CommandTokenizer } from '../src/cli/CommandTokenizer.js';
 import { CommandDispatcher } from '../src/commands/CommandDispatcher.js';
-import { ShapeFactory } from '../src/commands/ShapeFactory.js';
+import { ShapeFactory } from '../src/domain/ShapeFactory.js';
 
 test('分词保留颜色、带空格文本、空文本、引号转义和路径反斜杠', () => {
   const tokenizer = new CommandTokenizer();

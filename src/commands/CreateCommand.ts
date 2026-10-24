@@ -1,7 +1,8 @@
 import type { EditorSession } from '../application/EditorSession.js';
 import { EditCommand } from './EditCommand.js';
 import type { CommandArguments } from './CommandArguments.js';
-import type { ShapeFactory } from './ShapeFactory.js';
+import type { ShapeFactory } from '../domain/ShapeFactory.js';
+import { CommandShapeInput } from './CommandShapeInput.js';
 
 export class CreateCommand extends EditCommand {
   public static readonly syntax = 'create <type> <id> [params…] [in <containerId>]';
@@ -20,7 +21,7 @@ export class CreateCommand extends EditCommand {
       && this.args.text(this.args.length - 2) === 'in';
     const parent = hasContainer ? canvas.requireGroup(this.args.text(this.args.length - 1)) : canvas;
     const end = hasContainer ? this.args.length - 2 : this.args.length;
-    const shape = this.factory.create(this.args.text(0), this.args.slice(1, end));
+    const shape = this.factory.create(this.args.text(0), this.args.text(1), new CommandShapeInput(this.args.slice(2, end)));
     parent.insert(shape);
     return `${shape.type}#${shape.id} created${hasContainer ? ` in g#${this.args.text(this.args.length - 1)}` : ''}`;
   }

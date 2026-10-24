@@ -10,7 +10,9 @@ export class Text extends Shape {
     this.#content = content;
   }
 
-  public get content(): string { return this.#content; }
+  public override get content(): string { return this.#content; }
+  public override get svgAttributes(): Readonly<Record<string, string | number>> { return super.attributes; }
+  public override get summary(): string { return `${super.summary} ${JSON.stringify(this.#content)}`; }
 
   public override captureState(): ShapeState {
     const base = super.captureState();

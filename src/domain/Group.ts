@@ -11,7 +11,7 @@ export class Group extends Shape implements ShapeContainer {
     this.#collection = new ShapeCollection(this);
   }
 
-  public get children(): readonly Shape[] { return this.#collection.children; }
+  public override get children(): readonly Shape[] { return this.#collection.children; }
   public insert(shape: Shape, index?: number): void { this.#collection.insert(shape, index); }
   public remove(shape: Shape): void { this.#collection.remove(shape); }
 
