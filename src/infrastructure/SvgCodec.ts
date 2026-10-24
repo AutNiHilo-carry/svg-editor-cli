@@ -7,6 +7,7 @@ import { Group } from '../domain/Group.js';
 import { ShapeFactory } from '../domain/ShapeFactory.js';
 import type { Shape } from '../domain/Shape.js';
 import { XmlShapeInput } from './XmlShapeInput.js';
+import { SvgLength } from './SvgLength.js';
 
 export class SvgCodec {
   static readonly #namespace = 'http://www.w3.org/2000/svg';
@@ -23,8 +24,8 @@ export class SvgCodec {
       const viewBox = root.getAttribute('viewBox');
       const view = viewBox?.trim().split(/[\s,]+/).map(value => FiniteNumber.parse(value));
       if (view && (view.length !== 4 || view[2]! <= 0 || view[3]! <= 0)) throw new Error('invalid viewBox');
-      const width = root.hasAttribute('width') ? FiniteNumber.parse(root.getAttribute('width')!.replace(/px$/, '')) : (view?.[2] ?? 800);
-      const height = root.hasAttribute('height') ? FiniteNumber.parse(root.getAttribute('height')!.replace(/px$/, '')) : (view?.[3] ?? 600);
+      const width = root.hasAttribute('width') ? SvgLength.parse(root.getAttribute('width')!) : (view?.[2] ?? 800);
+      const height = root.hasAttribute('height') ? SvgLength.parse(root.getAttribute('height')!) : (view?.[3] ?? 600);
       const canvas = new Canvas(width, height);
       for (let index = 0; index < root.attributes.length; index++) {
         const attribute = root.attributes.item(index)!;
@@ -75,7 +76,8 @@ export class SvgCodec {
       if (attribute.name === 'id') continue;
       // 几何数值已由工厂解析；其余属性原样保留，set 白名单不扩大。
       if (typeof shape.svgAttributes[attribute.name] === 'number' && attribute.name !== 'stroke-width') continue;
-      shape.importAttribute(attribute.name, attribute.value);
+      const value = attribute.name === 'stroke-width' ? String(SvgLength.parse(attribute.value)) : attribute.value;
+      shape.importAttribute(attribute.name, value);
     }
     if (shape instanceof Group) {
       for (const child of children) shape.insert(this.decodeShape(child, reserved, warnings));

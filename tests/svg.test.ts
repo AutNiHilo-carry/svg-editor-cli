@@ -184,3 +184,18 @@ test('注释和 CDATA 中的 DOCTYPE 字样是普通内容，真正的文档类�
   assert.throws(() => codec.decode('<!DOCTYPE svg><svg/>'), /DOCTYPE is not supported/);
   assert.throws(() => codec.decode('<!DOCTYPE svg SYSTEM "example.dtd"><svg/>'), /DOCTYPE is not supported/);
 });
+
+test('SVG 的 px 描边宽度可读回，长度属性允许首尾空白且继续拒绝非法值', () => {
+  const codec = new SvgCodec();
+  const loaded = codec.decode('<svg width="400" height="200"><g id="g" stroke-width="2px"><rect id="r" width="10" height="20" stroke="black" stroke-width="0.5px"/></g></svg>');
+  assert.equal(loaded.canvas.requireShape('g').attributes['stroke-width'], 2);
+  assert.equal(loaded.canvas.requireShape('r').attributes['stroke-width'], 0.5);
+  const reread = codec.decode(codec.encode(loaded.canvas));
+  assert.equal(reread.canvas.requireShape('r').attributes['stroke-width'], 0.5);
+  const padded = codec.decode('<svg width=" 400px " height=" 200px "><rect id="r" x=" 1.5px " width=" 10px " height="20" stroke-width=" 2px "/></svg>');
+  assert.equal(padded.canvas.width, 400);
+  assert.equal(padded.canvas.requireShape('r').attributes['x'], 1.5);
+  for (const width of ['-1px', '2em', '0x10px', 'Infinitypx', '2 px']) {
+    assert.throws(() => codec.decode(`<svg><rect id="r" stroke-width="${width}"/></svg>`), /invalid SVG:/, width);
+  }
+});
