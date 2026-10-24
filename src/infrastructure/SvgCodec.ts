@@ -13,10 +13,10 @@ export class SvgCodec {
   public constructor(private readonly factory = new ShapeFactory()) {}
 
   public decode(xml: string): LoadedDocument {
-    if (/<!DOCTYPE/i.test(xml)) throw new Error('invalid SVG: DOCTYPE is not supported');
     try {
       const document = new DOMParser({ onError: (_level, message) => { throw new Error(message); } })
         .parseFromString(xml, 'image/svg+xml');
+      if (document.doctype) throw new Error('DOCTYPE is not supported');
       const root = document.documentElement;
       if (!root || root.localName !== 'svg') throw new Error('root element must be svg');
       this.checkNamespace(root);

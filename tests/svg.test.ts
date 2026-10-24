@@ -173,3 +173,14 @@ test('完整流程图脚本回放，中文文本保真且实际为 8 个元素',
   assert.equal(canvas.requireShape('process-label').content, '处理数据 v2');
   assert.equal(canvas.requireShape('process').attributes['y'], 100);
 });
+
+test('注释和 CDATA 中的 DOCTYPE 字样是普通内容，真正的文档类型仍拒绝', () => {
+  const codec = new SvgCodec();
+  const comment = codec.decode('<svg><!-- 示例文字 <!DOCTYPE svg> --><rect id="r" width="10" height="20"/></svg>');
+  assert.equal(comment.canvas.requireShape('r').type, 'rect');
+  const loaded = codec.decode('<svg><text id="t"><![CDATA[示例 <!DOCTYPE html>]]></text></svg>');
+  assert.equal(loaded.canvas.requireShape('t').content, '示例 <!DOCTYPE html>');
+  assert.equal(codec.decode(codec.encode(loaded.canvas)).canvas.requireShape('t').content, '示例 <!DOCTYPE html>');
+  assert.throws(() => codec.decode('<!DOCTYPE svg><svg/>'), /DOCTYPE is not supported/);
+  assert.throws(() => codec.decode('<!DOCTYPE svg SYSTEM "example.dtd"><svg/>'), /DOCTYPE is not supported/);
+});

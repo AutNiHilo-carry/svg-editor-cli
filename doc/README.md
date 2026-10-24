@@ -144,6 +144,13 @@ Infrastructure --> Domain
 - 真实回放确认流程图实际为 8 个元素，纠正最初人工误数为 9 的判断；原需求该处正确。Windows PowerShell 默认管道编码曾使中文变成问号，显式设置 UTF-8 后重新生成例图；另用独立 Node 进程回放验证“开始”和“处理数据 v2”保真。
 - 添加 examples 下的外部 SVG、完整流程图脚本及生成结果。累计 29 项测试通过，类型检查和构建通过；完整脚本已实际运行并完成保存再读回。浏览器视觉检查尚未执行，不将 XML 往返测试等同于视觉验证。
 
+### 修复 DOCTYPE 检测误报
+
+- 原实现对整个 XML 字符串搜索 DOCTYPE，导致注释或 CDATA 文本里出现该字样时，把合法 SVG 误拒绝。
+- 先添加注释、CDATA、文本保存读回及真实 DOCTYPE 的回归测试，确认旧实现为 29 项通过、1 项失败。
+- 改为在 XML 解析完成后检查 Document.doctype，区分真正的文档类型节点和普通内容。保留真实 DOCTYPE 的拒绝规则，模块依赖不变。
+- 修复后累计 30 项测试、类型检查和构建均通过。
+
 ## 3. 一致性自查
 
 - 实际模块包括 src/main.ts、cli、commands、application、domain、infrastructure 和 tests，与方案一致；增加 examples 用于回放与预览。工厂迁移、历史快照和外部 SVG 支持范围均已记录修订。
