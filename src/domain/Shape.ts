@@ -36,6 +36,10 @@ export abstract class Shape {
 
   public importAttribute(name: string, value: string): void {
     if (name === 'id' || name === 'text') throw new Error(`reserved attribute: ${name}`);
+    if (name === 'stroke-width' && value === 'inherit') {
+      this.#styles.set(name, value);
+      return;
+    }
     if (this.#geometry.has(name) || ['fill', 'stroke', 'stroke-width'].includes(name)) {
       this.setAttribute(name, value);
     } else {

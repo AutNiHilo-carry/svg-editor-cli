@@ -8,6 +8,7 @@ import { DocumentInspector } from '../src/application/DocumentInspector.js';
 import { FileDocumentStore } from '../src/infrastructure/FileDocumentStore.js';
 import { SvgCodec } from '../src/infrastructure/SvgCodec.js';
 import { EditorHarness } from './EditorHarness.js';
+import { CanvasSnapshot } from '../src/domain/CanvasSnapshot.js';
 
 test('六种图形 SVG 往返保留层级、顺序、属性和需要 XML 转义的文本与 ID', () => {
   const editor = new EditorHarness();
@@ -198,4 +199,18 @@ test('SVG 的 px 描边宽度可读回，长度属性允许首尾空白且继续
   for (const width of ['-1px', '2em', '0x10px', 'Infinitypx', '2 px']) {
     assert.throws(() => codec.decode(`<svg><rect id="r" stroke-width="${width}"/></svg>`), /invalid SVG:/, width);
   }
+});
+
+test('导入描边宽度 inherit 保留继承语义，保存读回及快照恢复不丢失', () => {
+  const codec = new SvgCodec();
+  const canvas = codec.decode('<svg><g id="g" stroke="black" stroke-width="4px"><rect id="r" width="20" height="10" stroke-width=" inherit "/></g></svg>').canvas;
+  assert.equal(canvas.requireShape('g').attributes['stroke-width'], 4);
+  assert.equal(canvas.requireShape('r').attributes['stroke-width'], 'inherit');
+  const snapshot = new CanvasSnapshot(canvas);
+  canvas.requireShape('r').setAttribute('stroke-width', 2);
+  snapshot.restore();
+  assert.equal(canvas.requireShape('r').attributes['stroke-width'], 'inherit');
+  assert.equal(codec.decode(codec.encode(canvas)).canvas.requireShape('r').attributes['stroke-width'], 'inherit');
+  assert.throws(() => canvas.requireShape('r').setAttribute('stroke-width', 'inherit'), /finite number/);
+  assert.throws(() => codec.decode('<svg><rect stroke-width="unknown"/></svg>'), /invalid SVG:/);
 });

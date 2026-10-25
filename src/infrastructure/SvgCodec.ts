@@ -76,7 +76,9 @@ export class SvgCodec {
       if (attribute.name === 'id') continue;
       // 几何数值已由工厂解析；其余属性原样保留，set 白名单不扩大。
       if (typeof shape.svgAttributes[attribute.name] === 'number' && attribute.name !== 'stroke-width') continue;
-      const value = attribute.name === 'stroke-width' ? String(SvgLength.parse(attribute.value)) : attribute.value;
+      const value = attribute.name === 'stroke-width'
+        ? (attribute.value.trim() === 'inherit' ? 'inherit' : String(SvgLength.parse(attribute.value)))
+        : attribute.value;
       shape.importAttribute(attribute.name, value);
     }
     if (shape instanceof Group) {
