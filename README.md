@@ -61,3 +61,5 @@ Get-Content -Encoding utf8 examples/flowchart.commands.txt | npm.cmd run cli
 导入支持六种内置图形、嵌套 g、XML 转义和缺 ID 补全。保留 viewBox、transform、字体和其他属性；move/scale 修改元素本地坐标，不把导入的 transform 展平成全局坐标。修改画布尺寸会重置 viewBox 为新画布范围。几何属性支持无单位数值或 px，百分比与其他单位、path/defs/tspan 等标签、DOCTYPE 明确拒绝。注释、原始缩进和 XML 属性顺序不保证保留；set 仍只允许需求白名单。
 
 架构方案和开发记录见 [doc/README.md](doc/README.md)。
+
+逐项需求核对、34 项测试和架构检查结果见 [最终检查记录](doc/final-review.md)。交付版本见 GitHub 的 [final 标签](https://github.com/AutNiHilo-carry/svg-editor-cli/tree/final)。

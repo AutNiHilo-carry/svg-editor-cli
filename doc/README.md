@@ -173,12 +173,19 @@ Infrastructure --> Domain
 - 验证保存读回、改为数值后通过快照恢复，均能保留 inherit；CLI set 继续使用已有数值规则，未知关键字继续拒绝。
 - 修复后累计 32 项测试、类型检查和构建均通过。已有视觉验收针对的流程图不含继承关键字，源 SVG 和截图未改动。
 
+### 最终逐项检查
+
+- 对照作业命令表、错误约定、设计模式、模块依赖与交付文档逐项检查，结果见 [最终检查记录](final-review.md)。
+- 复现并修复 XML 文本回车在保存读回后变化、非法 XML 控制字符被写入文件两处边界问题；保存失败继续保留原文件与命令历史。
+- 累计 34 项测试、类型检查和构建通过；对 54 个模块文件、49 个类和 175 处导入进行静态规则检查，未发现约定依赖方向的违规。
+- 重新执行 Edge 四种状态渲染验收，检查通过，原有截图和测量文件无内容变化。
+
 ## 3. 一致性自查
 
 - 实际模块包括 src/main.ts、cli、commands、application、domain、infrastructure 和 tests，与方案一致；增加 examples 用于回放与预览。工厂迁移、历史快照和外部 SVG 支持范围均已记录修订。
 - 抽样检查：CLI 引用 commands；commands 引用 application/domain；application 的 SnapshotEdit 引用 domain/CanvasSnapshot，DocumentStore 属于 application；infrastructure 实现该端口并使用 domain/ShapeFactory，不引用 commands；domain 无外层依赖，命令类无 node: 终端或文件引用。依赖方向符合方案。
 - Command、Composite、Memento、工厂及存储端口均已落地；按名字分派仍仅集中在 CommandDispatcher 和 ShapeFactory 两个注册表，后续插件化时待重构。
-- 完成实现后需重新检查实际目录与 import 关系，并在此记录偏差和修订。
+- 已重新核对实际目录、类文件命名和全部模块 import 关系；结果符合当前修订后的方案，静态检查范围及依据见 [最终检查记录](final-review.md)。
 
 ## 4. 质量保证手段
 
@@ -200,4 +207,4 @@ CLI 阶段测试累计 13 项（含后补数值校验回归测试）。脚本回
 2. 已验证编辑历史、新编辑清空 redo、四类文档操作屏障、查询不影响历史。
 3. 已验证 SVG 往返、转义、补 ID、文件错误及完整流程图回放。
 4. 已完成 Edge 浏览器视觉检查，原图、移动、缩放及撤销恢复截图见 [视觉验收记录](visual-acceptance.md)。
-5. 已有提交历史已推送至 GitHub；本次验收记录随后提交推送，final 标签仍待最终交付时创建。
+5. 代码和文档已推送至 GitHub，最终交付版本由 final 标签标记；最终检查结果和已知支持边界见 [最终检查记录](final-review.md)。

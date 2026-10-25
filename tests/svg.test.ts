@@ -214,3 +214,32 @@ test('导入描边宽度 inherit 保留继承语义，保存读回及快照恢�
   assert.throws(() => canvas.requireShape('r').setAttribute('stroke-width', 'inherit'), /finite number/);
   assert.throws(() => codec.decode('<svg><rect stroke-width="unknown"/></svg>'), /invalid SVG:/);
 });
+
+test('文本中的回车字符实体在保存读回后不被改成换行', () => {
+  const codec = new SvgCodec();
+  const canvas = codec.decode('<svg><text id="t">A&#13;B&#10;C&#9;D</text></svg>').canvas;
+  assert.equal(canvas.requireShape('t').content, 'A\rB\nC\tD');
+  const reread = codec.decode(codec.encode(canvas)).canvas;
+  assert.equal(reread.requireShape('t').content, 'A\rB\nC\tD');
+});
+
+test('非法 XML 文本保存失败，不覆盖已有文件，也不建立历史屏障', t => {
+  const directory = mkdtempSync(join(tmpdir(), 'svg-editor-'));
+  t.after(() => {
+    for (const name of readdirSync(directory)) unlinkSync(join(directory, name));
+    rmdirSync(directory);
+  });
+  const path = join(directory, 'document.svg');
+  const editor = new EditorHarness(new FileDocumentStore());
+  editor.run('init');
+  editor.run('create rect r 0 0 10 20');
+  editor.run(`save "${path}"`);
+  const original = readFileSync(path, 'utf8');
+  editor.run('create text t 1 2 "bad\u0001text"');
+  assert.throws(() => editor.run('save'), /cannot write file:/);
+  assert.equal(readFileSync(path, 'utf8'), original);
+  editor.run('undo');
+  assert.equal(editor.canvas.find('t'), undefined);
+  assert.equal(editor.canvas.requireShape('r').type, 'rect');
+  assert.equal(readdirSync(directory).some(name => name.endsWith('.tmp')), false);
+});

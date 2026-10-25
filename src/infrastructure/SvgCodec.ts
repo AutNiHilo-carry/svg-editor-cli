@@ -54,7 +54,9 @@ export class SvgCodec {
     for (const [key, value] of Object.entries(canvas.svgAttributes)) root.setAttribute(key, String(value));
     if (!root.hasAttribute('viewBox')) root.setAttribute('viewBox', `0 0 ${canvas.width} ${canvas.height}`);
     for (const shape of canvas.children) root.appendChild(this.encodeShape(document, shape));
-    return `<?xml version="1.0" encoding="UTF-8"?>\n${new XMLSerializer().serializeToString(document)}\n`;
+    const xml = new XMLSerializer().serializeToString(document, { requireWellFormed: true });
+    // XML 读取会把裸回车规范化为换行，使用字符引用保留文本的原始内容。
+    return `<?xml version="1.0" encoding="UTF-8"?>\n${xml.replace(/\r/g, '&#13;')}\n`;
   }
 
   private decodeShape(element: Element, reserved: Set<string>, warnings: string[]): Shape {
