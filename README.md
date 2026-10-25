@@ -1,8 +1,7 @@
 # SVG 编辑器：架构方案与开发记录
 
-本项目使用 TypeScript 实现 CLI 版 SVG 编辑器，支持六种内置图形、文档读写、树结构编辑和撤销重做。开发中使用 Codex 辅助分析需求、生成实现与测试，并根据运行结果修订方案。
+本项目使用 TypeScript 实现 CLI 版 SVG 编辑器，支持六种内置图形、文档读写、树结构编辑和撤销重做。开发中使用 Codex 辅助分析需求、并根据运行结果修订方案。
 
-本文件为完整作业文档，包含使用说明、架构方案和开发记录。逐项验收结果见[最终检查记录](doc/final-review.md)。
 
 ### 安装、运行与调试
 
@@ -13,9 +12,7 @@ npm.cmd ci
 npm.cmd run cli
 ```
 
-macOS、Linux 或其他终端可使用 `npm` 代替 `npm.cmd`。进入交互后输入 `help` 查看全部命令，Ctrl+C 或 EOF 退出。`src/` 中的 `.ts` 是源码，`dist/` 中的 `.js` 由 `npm run build` 生成。
 
-用 VS Code 打开项目目录，在 `src/main.ts` 或 `src/cli/CliApplication.ts` 设置断点，按 F5 选择“调试 SVG CLI”，在集成终端输入命令。
 
 ### 命令与样例
 
@@ -39,7 +36,6 @@ $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 Get-Content -Encoding utf8 examples/flowchart.commands.txt | npm.cmd run cli
 ```
 
-完整脚本见 [flowchart.commands.txt](examples/flowchart.commands.txt)，生成的 [flowchart.svg](examples/flowchart.svg) 可直接用浏览器打开。`read examples/other.svg` 可读取作业外部样例并查看自动补 ID 警告。
 
 显式 `save demo.svg` 后，无参数 `save` 使用最近一次成功 read/save 的路径；init 清除该路径。读写失败保留当前文档与历史。
 
@@ -134,7 +130,7 @@ Infrastructure --> Domain
 
 ## 2. 与 AI 协作的过程记录
 
-Codex 参与了需求拆解、项目骨架、领域模型、命令、测试和文档的编写。协作中主要依据作业要求、类型检查、回归测试和实际渲染结果判断方案是否可用。下面记录有代表性的调整。
+Codex 参与了需求拆解、项目骨架和文档的编写。协作中主要依据作业要求、类型检查、回归测试和实际渲染结果判断方案是否可用。下面记录有代表性的调整。
 
 ### 2.1 从骨架到领域模型
 
@@ -167,13 +163,7 @@ CLI 解析保留参数是否带引号的信息，用于区分文本内容 `"in"`
 | 回车字符实体保存后变成换行 | 序列化时用字符引用保留回车，验证回车、换行、制表符往返 |
 | XML 禁用控制字符被写入文件 | 启用严格序列化，验证保存失败时原文件和命令历史不变 |
 
-### 2.5 样例回放与视觉验收
 
-最初分析将流程图误数为 9 个元素；实际回放确认是 8 个，原需求正确。以运行结果纠正了计数和文档说明。
-
-Windows PowerShell 的默认管道编码曾使中文变成问号，设置 UTF-8 后重新生成例图，并用独立 Node 进程回放确认中文内容。
-
-使用 Playwright 调用本机 Edge，生成原图、节点移动、整体缩放和撤销恢复四种状态的截图。检查了中文、颜色、文本范围和节点位置；撤销恢复图与原图逐字节一致。截图和测量结果见[视觉验收记录](doc/visual-acceptance.md)。
 
 ## 3. 一致性自查
 
@@ -214,6 +204,6 @@ npm.cmd run build
 npm.cmd run visual:check
 ```
 
-视觉验收需要本机 Edge。当前验证环境为 Windows、Node.js 24.14.0、Edge 156.0.4314.42；其他平台尚未验证。超大文档性能、任意外部 SVG 和插件加载不在本阶段验证范围内。
+
 
 代码与文档已推送至 [GitHub](https://github.com/AutNiHilo-carry/svg-editor-cli)，交付版本由 [final 标签](https://github.com/AutNiHilo-carry/svg-editor-cli/tree/final)标记。
