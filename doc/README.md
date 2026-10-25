@@ -82,7 +82,7 @@ Infrastructure --> Domain
 
 ## 2. 过程记录
 
-### 2026-10-25：初始化与方案草稿
+### 初始化与方案草稿
 
 - 阅读作业要求，确认本阶段只需六种内置类型，box 和插件加载属于后续目标。
 - 初始目录只有需求 Markdown，没有 Git 仓库或实现代码。
@@ -92,7 +92,7 @@ Infrastructure --> Domain
 
 后续每个阶段补充实际遇到的问题、验证方式及修订决定，不预先填写未发生的工作。
 
-### 2026-10-25：图形与画布模型
+### 图形与画布模型
 
 - 添加 `Shape`、`Rect`、`Circle`、`Ellipse`、`Line`、`Text`、`Group` 和 `Canvas`，所有类均一类一文件。几何、样式、文本和子节点集合封装，查询仅返回冻结副本。
 - 引入 `ShapeContainer` 接口和 `ShapeCollection` 管理树关系。容器插入统一支持重新归属，先验证 ID 冲突、循环和插入位置，再修改原父级。父关系存于私有 WeakMap，无对外 setter。
@@ -114,7 +114,7 @@ Infrastructure --> Domain
 - 转换前增加完整字符串格式校验，继续检查转换结果是否有限；保留正负号、小数、指数和首尾空白的支持。非法属性设置不改变原状态。
 - 修复后执行全部 8 项领域测试、生产与测试代码类型检查、构建，均通过；模块与依赖方向不变。
 
-### 2026-10-25：CLI 与基础编辑命令
+### CLI 与基础编辑命令
 
 - 添加真实 REPL，交互时显示 svg>；管道输入省略提示符并在 EOF 正常退出。终端输入输出集中在 CLI，命令返回反馈字符串，异常统一输出单行 error: 并继续处理后续命令。
 - 添加分词器，保留双引号标记，支持带空格文本、空字符串、引号和反斜杠转义；只将整行 # 前缀作为注释，不吞掉颜色参数。
@@ -124,7 +124,7 @@ Infrastructure --> Domain
 - 发现原方案中“XML 解码直接复用 CLI 工厂”会诱发 infrastructure 对 commands 的反向依赖，已在工厂方案中记入修订，后续读写阶段再提取公共创建接口。
 - 验证 13 项测试通过，覆盖 8 项原领域测试及新增的分词、六种图形创建、编辑流程、错误原子性和独立进程脚本回放。类型检查和构建通过；实际终端检查提示符、连续命令及 Ctrl+C 退出成功。
 
-### 2026-10-25：撤销重做和树结构编辑
+### 撤销重做和树结构编辑
 
 - 添加 group/ungroup/addto/front/back/undo/redo，现有 create/move/scale/set/delete 同步接入历史管理。新增编辑类均继承 EditCommand，无按命令名判断是否可撤销的第三处分派。
 - 历史只在成功编辑后入栈，undo 后的新编辑清空 redo，失败操作保留原历史；成功 init 或 canvas 尺寸修改清空两栈并建立屏障，无参数 canvas 与 help 不触碰历史。
@@ -134,7 +134,7 @@ Infrastructure --> Domain
 - SnapshotEdit 额外保护执行失败的原子性：即使编辑过程已经部分修改后抛错，也恢复操作前状态；通过模拟中途故障测试确认，已有 redo 不丢失。
 - 新增 8 项历史与结构测试，累计 21 项全部通过；类型检查和构建通过。读写屏障目前落实 init/canvas，read/save 待下一阶段接入同一规则。
 
-### 2026-10-25：SVG 读写与结构显示
+### SVG 读写与结构显示
 
 - 添加 read/save/tree/show，至此接齐需求全部命令。DocumentInspector 生成结构树及属性详情，不直接输出终端；图形通过 children/content/summary 等多态接口提供信息，不按图形标签选择展示或序列化逻辑。
 - 将图形工厂移入 domain，提取 ShapeInput，由 CommandShapeInput 与 XmlShapeInput 分别适配 CLI 和 XML；消除原 CLI 工厂阻碍基础设施复用的问题，类型名注册仍集中于一处。
@@ -158,7 +158,7 @@ Infrastructure --> Domain
 - 保存时长度规范化为 px 坐标系下的无单位数值，读回保持等价；CLI set 的原白名单与数值语法不变。
 - 修复后累计 31 项测试、类型检查和构建均通过。
 
-### 2026-10-25：浏览器视觉验收
+### 浏览器视觉验收
 
 - 当前会话缺少 computer-use 所需的控制工具，改用 Playwright 启动本机 Edge 无界面渲染，实际检查输出截图。
 - 添加 scripts/VisualAcceptance.mjs 和 visual:check 命令，直接通过 CLI 生成节点移动、整体几何缩放和撤销恢复版本，保存四份 PNG 及浏览器实测几何、颜色、源文件哈希。
@@ -184,7 +184,7 @@ Infrastructure --> Domain
 
 初始化阶段执行类型检查、构建及 CLI 启动检查；这些只能证明骨架可构建启动，不能证明编辑器功能完成。
 
-初始化阶段实际验证结果（2026-10-25）：`npm.cmd run check`、`npm.cmd run build`、`npm.cmd run cli` 均成功，当时 CLI 输出骨架状态。依赖安装成功并生成 package-lock.json，供后续使用 `npm ci` 复现。
+初始化阶段实际验证结果：`npm.cmd run check`、`npm.cmd run build`、`npm.cmd run cli` 均成功，当时 CLI 输出骨架状态。依赖安装成功并生成 package-lock.json，供后续使用 `npm ci` 复现。
 
 领域模型阶段验证：通过 `npm.cmd test` 验证嵌套图形移动缩放、全局 ID 冲突、重新归属与排序、循环拒绝、数值与属性白名单、失败原子性、画布查询；共 7 项行为测试。`npm.cmd run check` 同时检查生产代码和测试代码，另执行构建验证。
 
