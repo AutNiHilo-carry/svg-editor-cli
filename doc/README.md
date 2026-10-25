@@ -2,7 +2,46 @@
 
 本项目使用 TypeScript 实现 CLI 版 SVG 编辑器，支持六种内置图形、文档读写、树结构编辑和撤销重做。开发中使用 Codex 辅助分析需求、生成实现与测试，并根据运行结果修订方案。
 
-运行方式见[项目 README](../README.md)，逐项验收结果见[最终检查记录](final-review.md)。
+本文件同时提供运行说明和作业文档。逐项验收结果见[最终检查记录](final-review.md)。
+
+### 安装、运行与调试
+
+需要 Node.js 22 或更新版本。以下命令均在项目根目录执行：
+
+```powershell
+npm.cmd ci
+npm.cmd run cli
+```
+
+macOS、Linux 或其他终端可使用 `npm` 代替 `npm.cmd`。进入交互后输入 `help` 查看全部命令，Ctrl+C 或 EOF 退出。`src/` 中的 `.ts` 是源码，`dist/` 中的 `.js` 由 `npm run build` 生成。
+
+用 VS Code 打开项目目录，在 `src/main.ts` 或 `src/cli/CliApplication.ts` 设置断点，按 F5 选择“调试 SVG CLI”，在集成终端输入命令。
+
+### 命令与样例
+
+支持 `init / read / save / canvas / create / delete / move / scale / set / group / ungroup / addto / front / back / tree / show / help / undo / redo`。
+
+```text
+init 400 300
+create g node
+create rect r 10 20 120 60 #4a90d9 in node
+create text label 25 55 "开始" in node
+move node 20 10
+undo
+tree
+save demo.svg
+```
+
+交互终端显示 `svg>`；管道回放省略提示符。Windows PowerShell 回放中文脚本时先设置 UTF-8：
+
+```powershell
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+Get-Content -Encoding utf8 examples/flowchart.commands.txt | npm.cmd run cli
+```
+
+完整脚本见 [flowchart.commands.txt](../examples/flowchart.commands.txt)，生成的 [flowchart.svg](../examples/flowchart.svg) 可直接用浏览器打开。`read examples/other.svg` 可读取作业外部样例并查看自动补 ID 警告。
+
+显式 `save demo.svg` 后，无参数 `save` 使用最近一次成功 read/save 的路径；init 清除该路径。读写失败保留当前文档与历史。
 
 ## 1. 架构方案
 
