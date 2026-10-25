@@ -56,6 +56,8 @@ Get-Content -Encoding utf8 examples/flowchart.commands.txt | npm.cmd run cli
 
 完整流程图回放脚本为 [examples/flowchart.commands.txt](examples/flowchart.commands.txt)，输出 [examples/flowchart.svg](examples/flowchart.svg)，可直接用浏览器打开。该图实际有 8 个元素，不含 svg 根。
 
+浏览器截图与检查结果见 [视觉验收记录](doc/visual-acceptance.md)，包含原图、移动、缩放和撤销恢复四种状态。本机安装 Edge 后可运行 `npm run visual:check` 重新生成截图。
+
 导入支持六种内置图形、嵌套 g、XML 转义和缺 ID 补全。保留 viewBox、transform、字体和其他属性；move/scale 修改元素本地坐标，不把导入的 transform 展平成全局坐标。修改画布尺寸会重置 viewBox 为新画布范围。几何属性支持无单位数值或 px，百分比与其他单位、path/defs/tspan 等标签、DOCTYPE 明确拒绝。注释、原始缩进和 XML 属性顺序不保证保留；set 仍只允许需求白名单。
 
 架构方案和开发记录见 [doc/README.md](doc/README.md)。

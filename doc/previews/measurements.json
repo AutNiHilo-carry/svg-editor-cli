@@ -1,0 +1,172 @@
+{
+  "browser": "156.0.4314.42",
+  "source": "examples/flowchart.svg",
+  "sourceSha256": "fa65b88229d957653164f49e42c67d751124cc121a34402bf6ae98cc47249ea0",
+  "scenarios": [
+    {
+      "name": "baseline",
+      "screenshot": "baseline.png",
+      "elementCount": 8,
+      "start": {
+        "x": 120,
+        "y": 100,
+        "width": 160,
+        "height": 60
+      },
+      "process": {
+        "x": 520,
+        "y": 100,
+        "width": 160,
+        "height": 60
+      },
+      "startLabel": {
+        "text": "开始",
+        "x": 154,
+        "y": 118,
+        "width": 34,
+        "height": 21
+      },
+      "processLabel": {
+        "text": "处理数据 v2",
+        "x": 544,
+        "y": 118,
+        "width": 87.515625,
+        "height": 21
+      },
+      "fills": [
+        "rgb(74, 144, 217)",
+        "rgb(245, 166, 35)"
+      ],
+      "line": {
+        "x": 280,
+        "y": 130,
+        "width": 240,
+        "height": 0
+      }
+    },
+    {
+      "name": "moved",
+      "screenshot": "moved.png",
+      "elementCount": 8,
+      "start": {
+        "x": 120,
+        "y": 100,
+        "width": 160,
+        "height": 60
+      },
+      "process": {
+        "x": 520,
+        "y": 200,
+        "width": 160,
+        "height": 60
+      },
+      "startLabel": {
+        "text": "开始",
+        "x": 154,
+        "y": 118,
+        "width": 34,
+        "height": 21
+      },
+      "processLabel": {
+        "text": "处理数据 v2",
+        "x": 544,
+        "y": 218,
+        "width": 87.515625,
+        "height": 21
+      },
+      "fills": [
+        "rgb(74, 144, 217)",
+        "rgb(245, 166, 35)"
+      ],
+      "line": {
+        "x": 280,
+        "y": 130,
+        "width": 240,
+        "height": 0
+      }
+    },
+    {
+      "name": "scaled",
+      "screenshot": "scaled.png",
+      "elementCount": 8,
+      "start": {
+        "x": 96,
+        "y": 80,
+        "width": 128,
+        "height": 48
+      },
+      "process": {
+        "x": 416,
+        "y": 80,
+        "width": 128,
+        "height": 48
+      },
+      "startLabel": {
+        "text": "开始",
+        "x": 123,
+        "y": 91,
+        "width": 34,
+        "height": 21
+      },
+      "processLabel": {
+        "text": "处理数据 v2",
+        "x": 435,
+        "y": 91,
+        "width": 87.515625,
+        "height": 21
+      },
+      "fills": [
+        "rgb(74, 144, 217)",
+        "rgb(245, 166, 35)"
+      ],
+      "line": {
+        "x": 224,
+        "y": 104,
+        "width": 192,
+        "height": 0
+      }
+    },
+    {
+      "name": "undo-restored",
+      "screenshot": "undo-restored.png",
+      "elementCount": 8,
+      "start": {
+        "x": 120,
+        "y": 100,
+        "width": 160,
+        "height": 60
+      },
+      "process": {
+        "x": 520,
+        "y": 100,
+        "width": 160,
+        "height": 60
+      },
+      "startLabel": {
+        "text": "开始",
+        "x": 154,
+        "y": 118,
+        "width": 34,
+        "height": 21
+      },
+      "processLabel": {
+        "text": "处理数据 v2",
+        "x": 544,
+        "y": 118,
+        "width": 87.515625,
+        "height": 21
+      },
+      "fills": [
+        "rgb(74, 144, 217)",
+        "rgb(245, 166, 35)"
+      ],
+      "line": {
+        "x": 280,
+        "y": 130,
+        "width": 240,
+        "height": 0
+      }
+    }
+  ],
+  "undoScreenshotMatchesBaseline": true
+}
