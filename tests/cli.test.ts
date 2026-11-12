@@ -4,7 +4,7 @@ import test from 'node:test';
 import { EditorSession } from '../src/application/EditorSession.js';
 import { CommandTokenizer } from '../src/cli/CommandTokenizer.js';
 import { CommandDispatcher } from '../src/commands/CommandDispatcher.js';
-import { ShapeFactory } from '../src/domain/ShapeFactory.js';
+import { createTestSystem } from './TestSystem.js';
 
 test('分词保留颜色、带空格文本、空文本、引号转义和路径反斜杠', () => {
   const tokenizer = new CommandTokenizer();
@@ -23,9 +23,9 @@ test('分词保留颜色、带空格文本、空文本、引号转义和路径�
 
 test('六种图形从命令创建，所有类型可指定父容器，省略样式不生成属性', () => {
   const session = new EditorSession();
-  const dispatcher = new CommandDispatcher(session, new ShapeFactory());
+  const { dispatcher, services } = createTestSystem(session);
   const tokenizer = new CommandTokenizer();
-  const run = (line: string) => dispatcher.dispatch(tokenizer.parse(line));
+  const run = (line: string) => dispatcher.dispatch(tokenizer.parse(line), services);
   assert.equal(run('init'), 'canvas 800x600 created');
   assert.equal(run('create g scene'), 'g#scene created');
   assert.equal(run('create g nested in scene'), 'g#nested created in g#scene');
@@ -49,9 +49,9 @@ test('六种图形从命令创建，所有类型可指定父容器，省略样�
 
 test('命令驱动容器移动缩放、属性修改和子树删除', () => {
   const session = new EditorSession();
-  const dispatcher = new CommandDispatcher(session, new ShapeFactory());
+  const { dispatcher, services } = createTestSystem(session);
   const tokenizer = new CommandTokenizer();
-  const run = (line: string) => dispatcher.dispatch(tokenizer.parse(line));
+  const run = (line: string) => dispatcher.dispatch(tokenizer.parse(line), services);
   run('init 400 300');
   run('create g node');
   run('create rect r 10 20 30 40 in node');
@@ -71,9 +71,9 @@ test('命令驱动容器移动缩放、属性修改和子树删除', () => {
 
 test('错误参数、ID 冲突、容器错误和未知类型均不改变文档', () => {
   const session = new EditorSession();
-  const dispatcher = new CommandDispatcher(session, new ShapeFactory());
+  const { dispatcher, services } = createTestSystem(session);
   const tokenizer = new CommandTokenizer();
-  const run = (line: string) => dispatcher.dispatch(tokenizer.parse(line));
+  const run = (line: string) => dispatcher.dispatch(tokenizer.parse(line), services);
   assert.match(run('help')!, /create <type>/);
   assert.throws(() => run('move r 1 2'), /no document\. use 'init' or 'read' first/);
   assert.throws(() => run('INIT'), /unknown command: INIT/);

@@ -4,19 +4,33 @@ import type { UndoableAction } from './UndoableAction.js';
 import type { DocumentStore } from './DocumentStore.js';
 import type { LoadedDocument } from './LoadedDocument.js';
 
+export type DocumentEventKind = 'init' | 'read' | 'save' | 'edit' | 'undo' | 'redo' | 'canvas';
+export interface DocumentEvent { readonly kind: DocumentEventKind; readonly canvas: Canvas; }
+export type DocumentListener = (event: DocumentEvent) => void;
+
 export class EditorSession {
   #canvas: Canvas | undefined;
   readonly #history = new CommandHistory();
   #path: string | undefined;
+  readonly #listeners = new Set<DocumentListener>();
 
-  public constructor(private readonly store?: DocumentStore) {}
+  public constructor(private store?: DocumentStore) {}
+
+  /** Used by the composition root after plugins have contributed codecs. */
+  public setStore(store: DocumentStore): void { this.store = store; }
 
   public initialize(width = 800, height = 600): Canvas {
     const canvas = new Canvas(width, height);
     this.#canvas = canvas;
     this.#path = undefined;
     this.#history.barrier();
+    this.emit('init', canvas);
     return canvas;
+  }
+
+  public onDocumentChange(listener: DocumentListener): () => void {
+    this.#listeners.add(listener);
+    return () => { this.#listeners.delete(listener); };
   }
 
   public requireCanvas(): Canvas {
@@ -28,16 +42,30 @@ export class EditorSession {
     const canvas = this.requireCanvas();
     canvas.resize(width, height);
     this.#history.barrier();
+    this.emit('canvas', canvas);
     return canvas;
   }
 
   public executeEdit(action: UndoableAction): string {
-    this.requireCanvas();
-    return this.#history.execute(action);
+    const canvas = this.requireCanvas();
+    const result = this.#history.execute(action);
+    this.emit('edit', canvas);
+    return result;
   }
 
-  public undo(): string { this.requireCanvas(); return this.#history.undo(); }
-  public redo(): string { this.requireCanvas(); return this.#history.redo(); }
+  public undo(): string {
+    const canvas = this.requireCanvas();
+    const result = this.#history.undo();
+    this.emit('undo', canvas);
+    return result;
+  }
+
+  public redo(): string {
+    const canvas = this.requireCanvas();
+    const result = this.#history.redo();
+    this.emit('redo', canvas);
+    return result;
+  }
 
   public read(path: string): LoadedDocument {
     if (!this.store) throw new Error('document store is not configured');
@@ -45,8 +73,11 @@ export class EditorSession {
     this.#canvas = loaded.canvas;
     this.#path = path;
     this.#history.barrier();
+    this.emit('read', loaded.canvas);
     return loaded;
   }
+
+  public get currentPath(): string | undefined { return this.#path; }
 
   public save(path = this.#path): string {
     const canvas = this.requireCanvas();
@@ -55,6 +86,11 @@ export class EditorSession {
     this.store.write(path, canvas);
     this.#path = path;
     this.#history.barrier();
+    this.emit('save', canvas);
     return path;
+  }
+
+  private emit(kind: DocumentEventKind, canvas: Canvas): void {
+    for (const listener of [...this.#listeners]) listener({ kind, canvas });
   }
 }

@@ -1,4 +1,5 @@
 import { Group } from './Group.js';
+import { isShapeContainer } from './isShapeContainer.js';
 import { ShapeCollection } from './ShapeCollection.js';
 import type { Shape } from './Shape.js';
 import type { ShapeContainer } from './ShapeContainer.js';
@@ -48,6 +49,7 @@ export class Canvas implements ShapeContainer {
   public get children(): readonly Shape[] { return this.#collection.children; }
   public insert(shape: Shape, index?: number): void { this.#collection.insert(shape, index); }
   public remove(shape: Shape): void { this.#collection.remove(shape); }
+  public forceRemove(shape: Shape): void { this.#collection.forceRemove(shape); }
   public walk(): readonly Shape[] { return this.children.flatMap(child => child.walk()); }
 
   public resize(width: number, height: number): void {
@@ -68,8 +70,8 @@ export class Canvas implements ShapeContainer {
   public requireGroup(id: string): Group {
     const shape = this.find(id);
     if (!shape) throw new Error(`no such container: ${id}`);
-    if (!(shape instanceof Group)) throw new Error(`not a container: ${id}`);
-    return shape;
+    if (!isShapeContainer(shape)) throw new Error(`not a container: ${id}`);
+    return shape as Group;
   }
 
   private validateSize(width: number, height: number): void {
