@@ -1,6 +1,11 @@
 node_modules/
 dist/
+dist-test/
+out/
+out-test/
 coverage/
 *.log
 .DS_Store
 Thumbs.db
+vscode-extension/out/
+vscode-extension/out-test/
