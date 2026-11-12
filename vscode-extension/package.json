@@ -1,0 +1,22 @@
+{
+  "name": "svg-outline-badge",
+  "displayName": "SVG Outline & Badge",
+  "description": "Explorer [] badge and native outline for SVG files",
+  "version": "1.0.0",
+  "publisher": "svgframe",
+  "private": true,
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished", "onLanguage:svg"],
+  "main": "./out/extension.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.test.json && node --test out-test/test/*.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/vscode": "^1.85.0"
+  }
+}
