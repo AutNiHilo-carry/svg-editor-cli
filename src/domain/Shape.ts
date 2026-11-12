@@ -20,6 +20,8 @@ export abstract class Shape {
   }
 
   public get id(): string { return this.#id; }
+  /** SVG element name; plugin composites may expose a different CLI type. */
+  public get svgTag(): string { return this.type; }
   public get parent(): ShapeContainer | null { return ShapeCollection.parentOf(this); }
   public get children(): readonly Shape[] { return []; }
   public get content(): string | undefined { return undefined; }

@@ -1,4 +1,5 @@
 import { Group } from './Group.js';
+import { isShapeContainer } from './isShapeContainer.js';
 import type { Canvas } from './Canvas.js';
 import type { Shape } from './Shape.js';
 import type { ShapeContainer } from './ShapeContainer.js';
@@ -15,7 +16,7 @@ export class CanvasSnapshot {
     this.#canvasState = canvas.captureState();
     const shapes = canvas.walk();
     this.#states = shapes.map(shape => shape.captureState());
-    this.#layout = [canvas, ...shapes.filter(shape => shape instanceof Group)]
+    this.#layout = [canvas, ...shapes.filter(shape => isShapeContainer(shape))]
       .map(container => ({ container, children: container.children }));
   }
 
@@ -23,11 +24,15 @@ export class CanvasSnapshot {
     // 先清空当前和快照中的容器，再按原树顺序重建，避免临时 ID 冲突。
     const containers = new Set<ShapeContainer>([
       this.#canvas,
-      ...this.#canvas.walk().filter(shape => shape instanceof Group),
+      ...this.#canvas.walk().filter(shape => isShapeContainer(shape)),
       ...this.#layout.map(item => item.container),
     ]);
     for (const container of containers) {
-      for (const child of container.children) container.remove(child);
+      for (const child of container.children) {
+        const forced = container as unknown as { forceRemove?: (shape: Shape) => void };
+        if (forced.forceRemove) forced.forceRemove(child);
+        else container.remove(child);
+      }
     }
     for (const state of this.#states) state.restore();
     for (const { container, children } of this.#layout) {

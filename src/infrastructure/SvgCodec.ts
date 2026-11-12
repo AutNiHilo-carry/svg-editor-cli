@@ -4,14 +4,16 @@ import { LoadedDocument } from '../application/LoadedDocument.js';
 import { Canvas } from '../domain/Canvas.js';
 import { FiniteNumber } from '../domain/FiniteNumber.js';
 import { Group } from '../domain/Group.js';
+import { isShapeContainer } from '../domain/isShapeContainer.js';
 import { ShapeFactory } from '../domain/ShapeFactory.js';
+import { builtinShapeProviders } from '../builtin/BuiltinShapes.js';
 import type { Shape } from '../domain/Shape.js';
 import { XmlShapeInput } from './XmlShapeInput.js';
 import { SvgLength } from './SvgLength.js';
 
 export class SvgCodec {
   static readonly #namespace = 'http://www.w3.org/2000/svg';
-  public constructor(private readonly factory = new ShapeFactory()) {}
+  public constructor(private readonly factory: ShapeFactory = new ShapeFactory(builtinShapeProviders)) {}
 
   public decode(xml: string): LoadedDocument {
     try {
@@ -61,7 +63,9 @@ export class SvgCodec {
 
   private decodeShape(element: Element, reserved: Set<string>, warnings: string[]): Shape {
     this.checkNamespace(element);
-    const type = element.localName ?? element.tagName;
+    const localName = element.localName ?? element.tagName;
+    const kind = element.getAttribute('data-kind');
+    const type = kind && this.factory.has(kind) ? kind : localName;
     let id = element.getAttribute('id');
     if (!id) {
       let sequence = 1;
@@ -70,9 +74,10 @@ export class SvgCodec {
       reserved.add(id);
       warnings.push(`warning: assigned id ${id} to unnamed <${type}>`);
     }
-    const shape = this.factory.create(type, id, new XmlShapeInput(element));
+    const shape = this.factory.create(type, id, new XmlShapeInput(element), 'restore');
+    if (shape.svgTag !== localName) throw new Error(`shape ${type} must serialize as <${shape.svgTag}>, found <${localName}>`);
     const children = this.childElements(element, shape.content !== undefined);
-    if (children.length > 0 && !(shape instanceof Group)) throw new Error(`nested elements are not supported in <${type}>`);
+    if (children.length > 0 && !isShapeContainer(shape)) throw new Error(`nested elements are not supported in <${type}>`);
     for (let index = 0; index < element.attributes.length; index++) {
       const attribute = element.attributes.item(index)!;
       if (attribute.name === 'id') continue;
@@ -83,7 +88,7 @@ export class SvgCodec {
         : attribute.value;
       shape.importAttribute(attribute.name, value);
     }
-    if (shape instanceof Group) {
+    if (isShapeContainer(shape)) {
       for (const child of children) shape.insert(this.decodeShape(child, reserved, warnings));
     }
     return shape;
@@ -106,7 +111,7 @@ export class SvgCodec {
   }
 
   private encodeShape(document: Document, shape: Shape): Element {
-    const element = document.createElementNS(SvgCodec.#namespace, shape.type);
+    const element = document.createElementNS(SvgCodec.#namespace, shape.svgTag);
     element.setAttribute('id', shape.id);
     for (const [key, value] of Object.entries(shape.svgAttributes)) element.setAttribute(key, String(value));
     if (shape.content !== undefined) element.appendChild(document.createTextNode(shape.content));

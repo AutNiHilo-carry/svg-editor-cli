@@ -5,7 +5,7 @@
   "description": "Lab1 Phase 1 SVG command-line editor",
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && tsc -p plugins/plugin-command-stats && tsc -p plugins/plugin-command-dir",
     "check": "tsc -p tsconfig.test.json",
     "cli": "tsx src/main.ts",
     "test": "tsx --test tests/*.test.ts",
@@ -22,5 +22,16 @@
   },
   "dependencies": {
     "@xmldom/xmldom": "^0.9.12"
-  }
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "workspaces": [
+    "plugins/*"
+  ]
 }

@@ -1,12 +1,16 @@
 import { createInterface } from 'node:readline';
 import { stdin, stdout } from 'node:process';
 import type { CommandDispatcher } from '../commands/CommandDispatcher.js';
+import type { CommandServices } from '../extensions/CommandDescriptor.js';
 import { CommandTokenizer } from './CommandTokenizer.js';
 
 export class CliApplication {
   readonly #tokenizer = new CommandTokenizer();
 
-  public constructor(private readonly dispatcher: CommandDispatcher) {}
+  public constructor(
+    private readonly dispatcher: CommandDispatcher,
+    private readonly services: CommandServices,
+  ) {}
 
   public run(): void {
     stdout.write("svg-editor 0.1 — type 'help' for commands\n");
@@ -15,7 +19,7 @@ export class CliApplication {
     reader.setPrompt('svg> ');
     reader.on('line', line => {
       try {
-        const result = this.dispatcher.dispatch(this.#tokenizer.parse(line));
+        const result = this.dispatcher.dispatch(this.#tokenizer.parse(line), this.services);
         if (result !== undefined) stdout.write(`${result}\n`);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);

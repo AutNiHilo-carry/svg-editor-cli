@@ -1,5 +1,6 @@
 import type { Shape } from './Shape.js';
 import type { ShapeContainer } from './ShapeContainer.js';
+import { isShapeContainer } from './isShapeContainer.js';
 
 // 容器共享的树结构管理器；父关系不开放 setter，统一在插入/移除时维护。
 export class ShapeCollection {
@@ -44,9 +45,20 @@ export class ShapeCollection {
     ShapeCollection.#parents.set(shape, this.#owner);
   }
 
+  /** Snapshot restoration bypasses plugin invariants; used only by CanvasSnapshot. */
+  public forceRemove(shape: Shape): void {
+    const index = this.#items.indexOf(shape);
+    if (index < 0) throw new Error(`no such child: ${shape.id}`);
+    this.#items.splice(index, 1);
+    ShapeCollection.#parents.delete(shape);
+  }
+
   public remove(shape: Shape): void {
     const index = this.#items.indexOf(shape);
     if (index < 0) throw new Error(`no such child: ${shape.id}`);
+    const owner = this.#owner as unknown as { assertCanDetach?: (child: Shape) => string | null };
+    const guarded = typeof owner.assertCanDetach === 'function' ? owner.assertCanDetach(shape) : null;
+    if (guarded) throw new Error(guarded);
     this.#items.splice(index, 1);
     ShapeCollection.#parents.delete(shape);
   }

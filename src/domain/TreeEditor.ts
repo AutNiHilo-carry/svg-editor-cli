@@ -1,4 +1,5 @@
 import { Group } from './Group.js';
+import { isShapeContainer } from './isShapeContainer.js';
 import type { Canvas } from './Canvas.js';
 import type { Shape } from './Shape.js';
 import type { ShapeContainer } from './ShapeContainer.js';
@@ -18,7 +19,7 @@ export class TreeEditor {
     const ordered = this.canvas.walk().filter(shape => selected.has(shape));
     for (const shape of ordered) {
       for (const ancestor of this.ancestors(shape)) {
-        if (ancestor instanceof Group && selected.has(ancestor)) {
+        if (selected.has(ancestor)) {
           throw new Error(`cannot group a container into its own descendant: ${ancestor.id}`);
         }
       }
@@ -36,6 +37,8 @@ export class TreeEditor {
 
   public ungroup(id: string): number {
     const group = this.canvas.requireGroup(id);
+    const guarded = group.canUngroup();
+    if (guarded) throw new Error(guarded);
     const parent = group.parent;
     if (parent === this.canvas) throw new Error(`cannot ungroup top-level container: ${id}`);
     if (!parent) throw new Error(`no such container: ${id}`);
@@ -61,10 +64,10 @@ export class TreeEditor {
     shape.parent?.insert(shape, 0);
   }
 
-  private ancestors(shape: Shape): readonly ShapeContainer[] {
-    const result: ShapeContainer[] = [];
-    let parent = shape.parent;
-    while (parent) { result.push(parent); parent = parent.parent; }
+  private ancestors(shape: Shape): readonly (Shape & ShapeContainer)[] {
+    const result: Array<Shape & ShapeContainer> = [];
+    let parent = shape.parent as unknown as Shape | null;
+    while (parent) { result.push(parent as Shape & ShapeContainer); parent = parent.parent as unknown as Shape | null; }
     return result;
   }
 }

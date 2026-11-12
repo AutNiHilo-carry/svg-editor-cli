@@ -1,0 +1,17 @@
+{
+  "name": "@svgframe/plugin-command-stats",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "contributes": {
+    "shapes": [],
+    "commands": ["stats"],
+    "decorators": [],
+    "attributes": []
+  },
+  "dependencies": {
+    "svg-editor-cli": "file:../.."
+  }
+}
