@@ -6,7 +6,10 @@ import type { PluginRegistry } from '../extensions/PluginRegistry.js';
 import type { SvgPlugin } from '../extensions/Plugin.js';
 import { activatePlugin } from '../extensions/activatePlugin.js';
 
-export const codePluginSpecifiers = [] as const;
+export const codePluginSpecifiers = [
+  '@svgframe/plugin-command-stats',
+  '@svgframe/plugin-command-dir',
+] as const;
 
 export async function loadCodePlugins(registry: PluginRegistry, session: EditorSession, report: (line: string) => void): Promise<void> {
   for (const specifier of codePluginSpecifiers) {
