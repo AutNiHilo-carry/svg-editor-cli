@@ -1,5 +1,5 @@
-import type { Command, CommandArguments, CommandDescriptor, EditorSession, PluginContext, Shape, SvgPlugin } from 'svg-editor-cli';
-import { isShapeContainer } from 'svg-editor-cli';
+import type { Command, CommandArguments, CommandDescriptor, EditorSession, PluginContext, Shape, SvgPlugin } from '../../../dist/index.js';
+import { isShapeContainer } from '../../../dist/index.js';
 
 class StatsCommand implements Command {
   public constructor(private readonly session: EditorSession) {}

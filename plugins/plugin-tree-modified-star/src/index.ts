@@ -1,4 +1,4 @@
-import type { Canvas, DocumentEvent, PluginContext, Shape, SvgPlugin, TreeDecorator, TreeRow } from 'svg-editor-cli';
+import type { Canvas, DocumentEvent, PluginContext, Shape, SvgPlugin, TreeDecorator, TreeRow } from '../../../dist/index.js';
 
 class ModifiedStar implements TreeDecorator {
   readonly name = 'modified-star';

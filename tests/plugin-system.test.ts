@@ -11,9 +11,15 @@ import { PluginRegistry } from '../src/extensions/PluginRegistry.js';
 import { activatePlugin } from '../src/extensions/activatePlugin.js';
 import { builtinPlugin } from '../src/builtin/BuiltinPlugin.js';
 import type { CommandServices } from '../src/extensions/CommandDescriptor.js';
-import statsPlugin from '@svgframe/plugin-command-stats';
-import dirPlugin, { createDirPlugin, NodeDirectoryAdapter } from '@svgframe/plugin-command-dir';
+import { createRequire } from 'node:module';
+import { realpathSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import type { DirectoryReader } from '@svgframe/plugin-command-dir';
+
+async function pluginModule(specifier: string): Promise<any> {
+  const resolved = realpathSync.native(createRequire(import.meta.url).resolve(specifier));
+  return await import(pathToFileURL(resolved).href);
+}
 
 async function system(...plugins: any[]) {
   const session = new EditorSession();
@@ -38,7 +44,7 @@ async function system(...plugins: any[]) {
 }
 
 test('stats is an independent command plugin with ordered counts', async () => {
-  const app = await system(statsPlugin);
+  const app = await system((await pluginModule('@svgframe/plugin-command-stats')).default);
   assert.equal(app.run('init 100 100'), 'canvas 100x100 created');
   app.run('create rect a 0 0 10 10');
   app.run('create circle c 10 10 5');
@@ -59,13 +65,13 @@ test('dir uses the directory port and sorts directories before files', async () 
       { name: 'a', kind: 'dir' },
     ],
   };
-  const app = await system(createDirPlugin(reader));
+  const app = await system((await pluginModule('@svgframe/plugin-command-dir')).createDirPlugin(reader));
   assert.equal(app.run('dir'), '[DIR]  a\n[DIR]  b\n[FILE]  .hidden\n[FILE]  z.txt');
 });
 
 test('dir works before init and reports reader failures without changing the document', async () => {
   const failing: DirectoryReader = { list: () => { throw new Error('denied'); } };
-  const app = await system(createDirPlugin(failing));
+  const app = await system((await pluginModule('@svgframe/plugin-command-dir')).createDirPlugin(failing));
   assert.throws(() => app.run('dir'), /cannot read directory:/);
   assert.throws(() => app.session.requireCanvas(), /no document/);
 });
@@ -76,7 +82,7 @@ test('real NodeDirectoryAdapter lists a fixed temporary directory', async () => 
   try {
     mkdirSync(join(dir, 'docs'));
     writeFileSync(join(dir, 'demo.svg'), '<svg/>');
-    const app = await system(createDirPlugin(new NodeDirectoryAdapter()));
+    const app = await system((await pluginModule('@svgframe/plugin-command-dir')).createDirPlugin(new (await pluginModule('@svgframe/plugin-command-dir')).NodeDirectoryAdapter()));
     process.chdir(dir);
     assert.equal(app.run('dir'), '[DIR]  docs\n[FILE]  demo.svg');
   } finally {

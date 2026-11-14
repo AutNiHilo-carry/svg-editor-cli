@@ -1,4 +1,10 @@
 export { EditorSession } from './application/EditorSession.js';
+export { CommandTokenizer } from './cli/CommandTokenizer.js';
+export { FileDocumentStore } from './infrastructure/FileDocumentStore.js';
+export { SvgCodec } from './infrastructure/SvgCodec.js';
+export { PluginLoader } from './host/PluginLoader.js';
+export { loadCodePlugins, codePluginSpecifiers } from './host/codeAssembly.js';
+export { builtinPlugin } from './builtin/BuiltinPlugin.js';
 export type { DocumentEvent, DocumentEventKind, DocumentListener } from './application/EditorSession.js';
 export { DocumentInspector } from './application/DocumentInspector.js';
 export { Canvas } from './domain/Canvas.js';
@@ -14,6 +20,7 @@ export { Ellipse } from './domain/Ellipse.js';
 export { Line } from './domain/Line.js';
 export { Text } from './domain/Text.js';
 export { CommandArguments } from './commands/CommandArguments.js';
+export { CommandDispatcher } from './commands/CommandDispatcher.js';
 export type { Command } from './commands/Command.js';
 export type { CommandToken } from './commands/CommandToken.js';
 export type { CommandDescriptor, CommandServices } from './extensions/CommandDescriptor.js';

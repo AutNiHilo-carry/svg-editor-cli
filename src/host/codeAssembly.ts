@@ -1,4 +1,4 @@
-﻿import { createRequire } from 'node:module';
+import { createRequire } from 'node:module';
 import { realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import type { EditorSession } from '../application/EditorSession.js';
@@ -13,7 +13,12 @@ export const codePluginSpecifiers = [
   '@svgframe/plugin-tree-modified-star',
 ] as const;
 
-export async function loadCodePlugins(registry: PluginRegistry, session: EditorSession, report: (line: string) => void): Promise<void> {
+/** Assembly mode A: the composition root names concrete plugin modules. */
+export async function loadCodePlugins(
+  registry: PluginRegistry,
+  session: EditorSession,
+  report: (line: string) => void,
+): Promise<void> {
   for (const specifier of codePluginSpecifiers) {
     try {
       const resolved = realpathSync.native(createRequire(import.meta.url).resolve(specifier));
