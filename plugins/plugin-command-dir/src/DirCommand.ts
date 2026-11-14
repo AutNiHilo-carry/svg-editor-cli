@@ -1,4 +1,4 @@
-import type { Command, CommandArguments, PluginContext, SvgPlugin } from 'svg-editor-cli';
+import type { Command, CommandArguments, PluginContext, SvgPlugin } from '../../../dist/index.js';
 import type { DirectoryEntry, DirectoryEntryKind, DirectoryReader } from './DirectoryReader.js';
 
 const ORDER: Record<DirectoryEntryKind, number> = { dir: 0, file: 1, link: 2, other: 3 };

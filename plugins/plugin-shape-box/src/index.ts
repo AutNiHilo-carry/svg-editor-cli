@@ -1,9 +1,17 @@
-import { Group, Rect, Text, type Shape, type ShapeInput } from 'svg-editor-cli';
-import type { ShapeProvider } from 'svg-editor-cli';
+import { Group, Rect, Text, type Shape, type ShapeInput } from '../../../dist/index.js';
+import type { ShapeProvider } from '../../../dist/index.js';
 
 export class Box extends Group {
   public override readonly type = 'box';
   public override get svgTag(): string { return 'g'; }
+  public override importAttribute(name: string, value: string): void {
+    if (name === 'data-kind') return;
+    super.importAttribute(name, value);
+  }
+
+  public override get summary(): string {
+    return Object.entries(super.attributes).map(([key, value]) => `${key}=${value}`).join(' ');
+  }
   public override get svgAttributes(): Readonly<Record<string, string | number>> {
     return Object.freeze({ ...super.svgAttributes, 'data-kind': 'box' });
   }
@@ -66,7 +74,7 @@ export const contributes = {
 export default {
   name: '@svgframe/plugin-shape-box',
   contributes,
-  activate(context: import('svg-editor-cli').PluginContext): void {
+  activate(context: import('../../../dist/index.js').PluginContext): void {
     context.registerShape(provider);
     context.registerAttribute({
       name: 'box-attributes',
@@ -83,4 +91,4 @@ export default {
       decorate: ({ shape }) => shape?.type === 'box' ? '(box)' : null,
     });
   },
-} satisfies import('svg-editor-cli').SvgPlugin;
+} satisfies import('../../../dist/index.js').SvgPlugin;

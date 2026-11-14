@@ -91,6 +91,7 @@ export class SvgCodec {
     if (isShapeContainer(shape)) {
       for (const child of children) shape.insert(this.decodeShape(child, reserved, warnings));
     }
+    this.factory.provider(type)?.validateRestored?.(shape);
     return shape;
   }
 

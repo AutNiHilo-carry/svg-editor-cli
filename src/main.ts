@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import { CliApplication } from './cli/CliApplication.js';
 import { EditorSession } from './application/EditorSession.js';
 import { CommandDispatcher } from './commands/CommandDispatcher.js';
@@ -8,12 +9,8 @@ import { PluginRegistry } from './extensions/PluginRegistry.js';
 import { activatePlugin } from './extensions/activatePlugin.js';
 import { builtinPlugin } from './builtin/BuiltinPlugin.js';
 import { PluginLoader } from './host/PluginLoader.js';
-import { resolve } from 'node:path';
-import { createRequire } from 'node:module';
-import { realpathSync } from 'node:fs';
-import { pathToFileURL } from 'node:url';
+import { loadCodePlugins } from './host/codeAssembly.js';
 import type { CommandServices } from './extensions/CommandDescriptor.js';
-import type { SvgPlugin } from './extensions/Plugin.js';
 
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
@@ -28,16 +25,7 @@ async function main(): Promise<void> {
     const loader = new PluginLoader(registry, session, resolve(config), line => process.stderr.write(`${line}\n`));
     await loader.load();
   } else if (!noPlugins) {
-    // Assembly mode A: the composition root decides which plugins to instantiate.
-    for (const specifier of ['@svgframe/plugin-command-stats', '@svgframe/plugin-command-dir', '@svgframe/plugin-shape-box', '@svgframe/plugin-tree-modified-star']) {
-      try {
-        const resolved = realpathSync(createRequire(import.meta.url).resolve(specifier));
-        const loaded = await import(pathToFileURL(resolved).href) as { default: SvgPlugin };
-        await activatePlugin(registry, loaded.default, session);
-      } catch (error) {
-        process.stderr.write(`error: ${error instanceof Error ? error.message : String(error)}\n`);
-      }
-    }
+    await loadCodePlugins(registry, session, line => process.stderr.write(`${line}\n`));
   }
 
   const shapes = new ShapeFactory(registry.shapes);

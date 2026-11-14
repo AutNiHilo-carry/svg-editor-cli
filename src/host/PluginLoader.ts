@@ -56,7 +56,7 @@ export class PluginLoader {
     const requireFromConfig = createRequire(this.configPath);
     let resolved: string;
     try {
-      resolved = realpathSync(requireFromConfig.resolve(entry.module));
+      resolved = realpathSync.native(requireFromConfig.resolve(entry.module));
     } catch {
       this.report(`error: plugin not found: ${entry.module}`);
       return;
