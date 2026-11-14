@@ -217,3 +217,149 @@ npm.cmd run visual:check
 视觉验收需要本机 Edge。当前验证环境为 Windows、Node.js 24.14.0、Edge 156.0.4314.42；其他平台尚未验证。超大文档性能、任意外部 SVG 和插件加载不在本阶段验证范围内。
 
 代码与文档已推送至 [GitHub](https://github.com/AutNiHilo-carry/svg-editor-cli)，交付版本由 [final 标签](https://github.com/AutNiHilo-carry/svg-editor-cli/tree/final)标记。
+
+---
+
+# Phase 2：插件实践与插件式重构
+
+## 1. 扩展点清单
+
+四个接口均定义在内核 `src/extensions/`，内核只依赖接口；具体实现放在 `src/builtin/` 或 `plugins/`。
+
+| 扩展点 | 接口/注册表 | 内核调用位置 | 已有实现 | 未加载可选插件时 | 违约时 |
+|---|---|---|---|---|---|
+| `ShapeProvider` | `ShapeProvider.ts`，`ShapeFactory.register/create` | `CreateCommand.apply`、`SvgCodec.decodeShape` | `BuiltinShapes.ts` 六种；`box` | 六种内置图形仍可用；`box` 报 `unknown shape type: box (is the plugin loaded?)` | id 冲突由 `ShapeCollection.insert` 拒绝；读回缺必要子部件抛 `invalid SVG`；provider 返回错误 id 拒绝 |
+| `Command` | `CommandDescriptor.ts`，`CommandDispatcher.register/dispatch` | `CommandDispatcher.dispatch` | 17 个内置命令；`stats`、`dir` | 内置命令不变；未加载时报 `unknown command: stats/dir` | 同名注册抛 `duplicate registration: commands/<name>` |
+| `TreeDecorator` | `TreeDecorator.ts`，`PluginRegistry.registerDecorator` | `DocumentInspector.tags` | `(box)`、`modified-star` | 树输出与 Phase 1 完全一致，无标签 | 重复名拒绝；装饰器抛错由命令边界转成一行 `error:` |
+| `AttributeHandler` | `AttributeHandler.ts`，`PluginRegistry.registerAttribute` | `SetCommand.apply` | box 的 `fill`、`label` | 回退 Phase 1 白名单；未知属性报 `unknown attribute` | 多个命中拒绝 `ambiguous attribute handler`；`apply` 抛错由 `SnapshotEdit` 整体回滚 |
+
+插件注册统一走 `src/extensions/activatePlugin.ts`：先 staging，校验 `contributes` 名称集合，再检查全局重复，全部通过才 commit；任何失败丢弃全部暂存注册和事件订阅。
+
+## 2. 重构后的模块与依赖
+
+```plantuml
+@startuml
+package "kernel" {
+  [domain]
+  [application]
+  [extensions]
+  [infrastructure]
+}
+package "assembly" {
+  [builtin plugin]
+  [command dispatcher]
+  [PluginLoader / codeAssembly]
+  [main]
+}
+package "plugins" {
+  [stats]
+  [dir]
+  [box]
+  [modified-star]
+}
+package "vscode" {
+  [outline]
+  [decoration]
+}
+[builtin plugin] --> [extensions]
+[plugins] --> [extensions] : public API
+[plugins] --> [domain] : Shape / Group / Rect
+[PluginLoader / codeAssembly] --> [extensions]
+[main] --> [assembly]
+[main] --> [plugins] : code or config
+[vscode] ..> [domain] : concepts only, no code dependency
+@enduml
+```
+
+内核不导入 `plugins/`；`stats` 与 `dir` 是独立 npm workspace 包，`box` 与 `modified-star` 同理。内置六种图形也通过 `ShapeProvider` 注册，但保留在宿主侧作为默认能力。
+
+## 3. 两种装配方式
+
+**方式 A：代码装配**（`src/host/codeAssembly.ts`）
+
+```ts
+export const codePluginSpecifiers = [
+  '@svgframe/plugin-command-stats',
+  '@svgframe/plugin-command-dir',
+  '@svgframe/plugin-shape-box',
+  '@svgframe/plugin-tree-modified-star',
+];
+```
+
+`loadCodePlugins` 逐个动态导入并调用 `activatePlugin`；新增插件需要改这一处并重新构建。
+
+**方式 B：配置装配**（`plugins.config.json`）
+
+```json
+{
+  "plugins": [
+    { "module": "@svgframe/plugin-command-stats" },
+    { "module": "@svgframe/plugin-command-dir" },
+    { "module": "@svgframe/plugin-shape-box" },
+    { "module": "@svgframe/plugin-tree-modified-star" }
+  ]
+}
+```
+
+```powershell
+node dist/main.js --config plugins.config.json
+node dist/main.js --no-plugins   # 对照 Phase 1
+```
+
+加载器按数组顺序加载，`enabled:false` 完全跳过；相对路径以配置文件目录为基准，包名按 Node 解析；`options` 原样传给 `PluginContext.options`。`Package.json.contributes` 优先于源码内声明。
+
+四条失败路径：`plugin not found`、`plugin has no default export`、`plugin manifest mismatch`、`plugin failed to activate`。重复注册、manifest 不一致、activate 抛错都会撤销该插件的暂存注册，保留已成功插件并继续启动。非法配置打印 `error: invalid plugin config`，以默认内置能力启动。
+
+## 4. Box 与属性契约
+
+- `Box` 继承 `Group`，`type='box'`、`svgTag='g'`，内部 id 为 `<id>-rect` / `<id>-label`。
+- 创建：`create box n1 120 100 160 60 "开始"` 一条命令生成三个元素；`box` 可 `in`、被 `group`、嵌套 box。
+- 序列化：`<g id="n1" data-kind="box">`。
+- 读回：`data-kind` 命中 `ShapeProvider` 才还原；无插件时降级为普通 `g` 并告警；有插件但缺必要子部件时拒绝整个读入，不生成半成品。
+- 属性：`fill` 传播到 `n1-rect`，`label` 改写 `n1-label`；由 `BoxAttributeHandler` 处理，不扩张内核白名单。
+- 不变量：`ungroup`、删除/移走必要子部件被拒绝；`CanvasSnapshot` 恢复走 `forceRemove` 内部路径，避免回滚被插件不变量卡住。
+
+## 5. dir 适配器
+
+- Target：`DirectoryReader.list(path)`。
+- Adaptee：Node `fs.readdirSync(..., { withFileTypes: true })`。
+- Adapter：`NodeDirectoryAdapter`。
+- Client：`DirCommand`，只依赖 `DirectoryReader`，测试可注入测试替身。
+- 目录在前、文件在后，组内按 UTF-16 码元升序；隐藏项包含，`.`/`..` 不出现；符号链接显示 `[LINK]` 且不跟随。
+- `dir` 不 require 文档，不改变文档、dirty 状态、cwd 或 undo 历史。
+
+## 6. ADR
+
+**ADR-1 属性处理器契约**：`handles` 必须无副作用；多个命中直接拒绝，不做隐式优先级；一次 `set` 由 `SnapshotEdit` 包裹，整棵画布快照保证单 undo 单元；处理器抛错时恢复快照且 `CommandHistory` 不 push。
+
+**ADR-2 box 读回降级**：合法 box 必须能从 `data-kind` + 两个固定子部件还原；子部件缺失/类型错误拒绝整个 `read`，保证内存中不存在半成品。未安装插件时按普通 `g` 读入，保留 `data-kind` 属性，后续保存不丢信息。
+
+**ADR-3 dirty 语义**：采用“内容与上次保存不一致”，不是“发生过编辑”。`modified-star` 在实例字段保存每个元素及整棵树的指纹；子树指纹包含后代，因此子元素变化会标记祖先；新节点无基线立即标星；`undo` 回到保存点后指纹相等，星号消失。标签顺序按装饰器注册顺序，`(box)` 在前、`*` 在后。
+
+**ADR-4 清单校验时机**：在 `activate` 完成后、commit 前校验 `contributes`；暂存期只做类别内重复检查，全局重复在 commit 前统一检查。这样既能让插件先完成全部注册再声明，也能保证失败回滚。
+
+## 7. VSCode 部分分析
+
+- VSCode 负责 Explorer、编辑器、原生 Outline 视图、文件事件与渲染；扩展只注册 `FileDecorationProvider` 和 `DocumentSymbolProvider`，由 VSCode 在合适的时机调用。
+- `provideFileDecoration` 只返回 `{badge:'[]'}`，不重命名、不修改文件；非 `.svg` 和目录返回 `undefined`。
+- `provideDocumentSymbols` 把 XML 元素树映射为 `DocumentSymbol`；`range` 覆盖整个元素，`selectionRange` 指向开始标签，点击可定位。坏 XML 时捕获异常返回空数组。
+- 与经典 Decorator 模式：VSCode 的 FileDecoration 是“附加显示信息”，不是对象包装；扩展提供装饰数据，VSCode 负责组合渲染。与 Adapter 模式：`DocumentSymbolProvider` 把扩展的 XML 模型适配成 VSCode 的符号协议，`FileDecorationProvider` 把 URI 适配成装饰对象。二者都是“接口适配 + 宿主回调”，但装饰结果不改变原对象。
+- Phase 1 复用：可直接复用的是“元素/容器树、id 语义、XML 健壮性处理”这些概念；CLI 的 `SvgCodec` 依赖 Canvas、命令历史和 `Shape` 实例，且不保留源码 offset，不能直接用于 Outline。强行复用会把 UI 与 CLI 内核耦合，因此扩展保留独立的轻量 offset parser，只复用规则和测试样例。
+
+## 8. AI 协作中的检查与修正
+
+- 最初把插件通过 `node_modules` 符号链接导入，导致 `Group`/`Shape` 出现两份模块实例，`instanceof` 判断失效；用 `realpathSync.native` 加载真实插件路径，并以 `isShapeContainer` 结构判断兜底。
+- `box` 的 create 与 restore 共用一个 provider，读回时重复创建子部件导致 `id already exists`；增加 `mode: 'create' | 'restore'`，restore 只创建空壳，由 codec 插入子部件。
+- `SnapshotEdit` 回滚时若直接调用受保护的 `remove`，会被 box 的必要子部件不变量拒绝；增加仅供快照恢复使用的 `forceRemove` 路径。
+- `set fill` 最初绕过处理器，原因是 `SetCommand` 改动没有进入实际 apply；补上 handler 查找和冲突拒绝后才通过。
+- 加载器最初用 `require.resolve` 的符号链接路径，导致插件内相对导入指向错误目录；统一用真实路径后解决。
+
+## 9. 一致性自查与质量保证
+
+- 实际目录与方案一致：扩展点位于 `src/extensions`，装配位于 `src/host`，插件位于 `plugins/*`，VSCode 扩展独立于 `vscode-extension/`。
+- 依赖方向：`src/extensions` 不导入 `plugins` 或 `vscode`；`src/host` 依赖扩展点；插件只依赖 `svg-editor-cli` 的公开 barrel 和 Node 标准库。
+- `--no-plugins` 的 Phase 1 transcript 已逐字节对比通过。
+- 测试：Phase 1 回归、`stats`/`dir`、loader 6 条、box 不变量与 round-trip、`modified-star` 状态机、代码/配置装配逐字节一致、VSCode outline 5 条。
+- 指标：见 `docs/metrics/`，数字由 `scripts/metrics.mjs` 从 `final..HEAD` 生成。
+
+真实 VSCode 截图需要在有 GUI 的桌面环境运行 `vscode-extension` 后补入 `docs/images/`；本沙箱禁止 Electron 创建 named pipe，无法在此生成可信截图，未使用伪造图片。
