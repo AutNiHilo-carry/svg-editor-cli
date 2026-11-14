@@ -1,0 +1,17 @@
+{
+  "name": "@svgframe/plugin-shape-box",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "contributes": {
+    "shapes": ["box"],
+    "commands": [],
+    "decorators": ["box-type-label"],
+    "attributes": ["box-attributes"]
+  },
+  "dependencies": {
+    "svg-editor-cli": "file:../.."
+  }
+}
