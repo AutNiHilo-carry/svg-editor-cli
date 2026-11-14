@@ -10,6 +10,7 @@ export const codePluginSpecifiers = [
   '@svgframe/plugin-command-stats',
   '@svgframe/plugin-command-dir',
   '@svgframe/plugin-shape-box',
+  '@svgframe/plugin-tree-modified-star',
 ] as const;
 
 export async function loadCodePlugins(registry: PluginRegistry, session: EditorSession, report: (line: string) => void): Promise<void> {
