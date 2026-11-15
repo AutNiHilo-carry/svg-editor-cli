@@ -9,7 +9,9 @@
     "check": "tsc -p tsconfig.test.json",
     "cli": "tsx src/main.ts",
     "test": "tsx --test tests/*.test.ts",
-    "visual:check": "node scripts/VisualAcceptance.mjs"
+    "visual:check": "node scripts/VisualAcceptance.mjs",
+    "verify": "node scripts/verify-transcripts.mjs",
+    "metrics": "node scripts/metrics.mjs"
   },
   "engines": {
     "node": ">=22"
