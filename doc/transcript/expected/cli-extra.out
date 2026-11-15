@@ -1,0 +1,20 @@
+svg-editor 0.1 — type 'help' for commands
+[DIR]  docs
+[DIR]  plugins
+[FILE]  .env
+[FILE]  demo.svg
+[FILE]  other.svg
+[FILE]  package.json
+canvas 800x600 created
+rect#a created
+circle#c created
+text#t created
+g#group created
+rect#b created in g#group
+rect: 2  circle: 1  text: 1  (total 4, containers 1)
+[DIR]  docs
+[DIR]  plugins
+[FILE]  .env
+[FILE]  demo.svg
+[FILE]  other.svg
+[FILE]  package.json

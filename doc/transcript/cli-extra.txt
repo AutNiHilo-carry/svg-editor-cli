@@ -1,0 +1,10 @@
+# stats and dir plugins
+dir
+init 800 600
+create rect a 0 0 10 10
+create circle c 10 10 5
+create text t 0 0 "x"
+create g group
+create rect b 0 0 5 5 in group
+stats
+dir
