@@ -30,7 +30,7 @@ export class DocumentInspector {
 
   private row(prefix: string, connector: string, shape: Shape, isRoot: boolean): string {
     const summary = shape.summary ? `  ${shape.summary}` : '';
-    return `${prefix}${connector}${shape.type}#${shape.id}${summary}${this.tags(shape, isRoot)}`;
+    return `${prefix}${connector}${shape.svgTag}#${shape.id}${summary}${this.tags(shape, isRoot)}`;
   }
 
   private branches(children: readonly Shape[], prefix: string): string[] {

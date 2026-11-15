@@ -59,7 +59,7 @@ test('box is a container with fill/label semantics, invariants, and round-trip',
   app.run('init 800 600');
   assert.equal(app.run('create box n1 120 100 160 60 "开始"'), 'box#n1 created');
   const tree = app.run('tree')!;
-  assert.match(tree, /box#n1 \(box\)/);
+  assert.match(tree, /g#n1 \(box\)/);
   assert.match(tree, /rect#n1-rect/);
   assert.match(tree, /text#n1-label/);
 
@@ -75,7 +75,7 @@ test('box is a container with fill/label semantics, invariants, and round-trip',
   const path = join(dir, 'box.svg');
   assert.equal(app.run(`save ${path}`), `saved to ${path} (3 elements)`);
   assert.equal(app.run(`read ${path}`), `read ${path} (3 elements)`);
-  assert.match(app.run('tree')!, /box#n1 \(box\)/);
+  assert.match(app.run('tree')!, /g#n1 \(box\)/);
 });
 
 test('malformed box input is rejected instead of creating a partial box', async () => {
