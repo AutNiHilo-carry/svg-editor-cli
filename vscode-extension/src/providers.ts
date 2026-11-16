@@ -28,8 +28,14 @@ function toSymbol(node: OutlineNode, document: vscode.TextDocument): vscode.Docu
 }
 
 export class SvgFileDecorationProvider implements vscode.FileDecorationProvider {
-  provideFileDecoration(uri: vscode.Uri): vscode.FileDecoration | undefined {
+  async provideFileDecoration(uri: vscode.Uri): Promise<vscode.FileDecoration | undefined> {
     if (uri.scheme !== 'file' || !isSvgPath(uri.path)) return undefined;
+    try {
+      const stat = await vscode.workspace.fs.stat(uri);
+      if (stat.type & vscode.FileType.Directory) return undefined;
+    } catch {
+      return undefined;
+    }
     return {
       badge: '[]',
       tooltip: 'SVG file',
