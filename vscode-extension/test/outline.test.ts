@@ -41,6 +41,11 @@ test('comments and declarations are not outline nodes', () => {
   assert.equal(roots[0].children[0].tag, 'g');
 });
 
+test('an empty id is treated as no id', () => {
+  const roots = buildOutlineModel('<svg><rect id="" width="1" height="1"/></svg>');
+  assert.equal(roots[0].children[0].id, null);
+});
+
 test('only .svg files are badge candidates, case-insensitively', () => {
   assert.equal(isSvgPath('/tmp/a.svg'), true);
   assert.equal(isSvgPath('/tmp/A.SVG'), true);

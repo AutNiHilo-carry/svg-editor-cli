@@ -102,7 +102,8 @@ export function buildOutlineModel(source: string): OutlineNode[] {
     const raw = source.slice(lt + 1, tagEnd);
     const nameStart = lt + 1 + (raw.length - raw.trimStart().length);
     const idMatch = /(?:^|\s)id\s*=\s*(?:"([^"]*)"|'([^']*)')/.exec(body.slice(nameMatch![0].length));
-    const id = idMatch ? decodeEntities(idMatch[1] ?? idMatch[2] ?? '') : null;
+    const idValue = idMatch ? decodeEntities(idMatch[1] ?? idMatch[2] ?? '').trim() : '';
+    const id = idValue === '' ? null : idValue;
     const node: Pending = {
       tag,
       id,
