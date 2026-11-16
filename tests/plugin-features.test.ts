@@ -63,6 +63,10 @@ test('box is a container with fill/label semantics, invariants, and round-trip',
   assert.match(tree, /rect#n1-rect/);
   assert.match(tree, /text#n1-label/);
 
+  const shown = app.run('show n1')!;
+  assert.match(shown, /box#n1  parent=svg/);
+  assert.match(shown, /fill="#4a90d9"/);
+  assert.match(shown, /label="开始"/);
   assert.equal(app.run('set n1 fill #f5a623'), 'box#n1 fill propagated to n1-rect');
   assert.equal(app.run('set n1 label "处理数据"'), 'box#n1 label updated: "处理数据"');
   assert.match(app.run('tree')!, /fill=#f5a623/);

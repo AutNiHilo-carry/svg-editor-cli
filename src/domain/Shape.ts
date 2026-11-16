@@ -26,11 +26,13 @@ export abstract class Shape {
   public get children(): readonly Shape[] { return []; }
   public get content(): string | undefined { return undefined; }
 
-  public get attributes(): Readonly<Record<string, string | number>> {
+  protected get baseAttributes(): Readonly<Record<string, string | number>> {
     return Object.freeze(Object.fromEntries([...this.#imported, ...this.#geometry, ...this.#styles]));
   }
 
-  public get svgAttributes(): Readonly<Record<string, string | number>> { return this.attributes; }
+  public get attributes(): Readonly<Record<string, string | number>> { return this.baseAttributes; }
+
+  public get svgAttributes(): Readonly<Record<string, string | number>> { return this.baseAttributes; }
 
   public get summary(): string {
     return Object.entries(this.svgAttributes).map(([key, value]) => `${key}=${value}`).join(' ');
