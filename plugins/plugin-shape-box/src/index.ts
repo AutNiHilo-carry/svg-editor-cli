@@ -9,8 +9,19 @@ export class Box extends Group {
     super.importAttribute(name, value);
   }
 
+  public override get attributes(): Readonly<Record<string, string | number>> {
+    const base = super.attributes;
+    const rect = this.children.find(child => child.id === `${this.id}-rect`);
+    const label = this.children.find(child => child.id === `${this.id}-label`);
+    return Object.freeze({
+      ...base,
+      ...(rect ? { fill: rect.attributes.fill } : {}),
+      ...(label?.content !== undefined ? { label: label.content } : {}),
+    });
+  }
+
   public override get summary(): string {
-    return Object.entries(super.attributes).map(([key, value]) => `${key}=${value}`).join(' ');
+    return Object.entries(this.baseAttributes).map(([key, value]) => `${key}=${value}`).join(' ');
   }
   public override get svgAttributes(): Readonly<Record<string, string | number>> {
     return Object.freeze({ ...super.svgAttributes, 'data-kind': 'box' });

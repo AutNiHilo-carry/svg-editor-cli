@@ -21,7 +21,7 @@ export class DocumentInspector {
   public show(id: string): string {
     const shape = this.canvas.requireShape(id);
     const parentShape = shape.parent as unknown as Shape | null;
-    const parent = parentShape && isShapeContainer(parentShape) ? `g#${parentShape.id}` : 'svg';
+    const parent = parentShape && parentShape !== (this.canvas as unknown as Shape) ? `g#${parentShape.id}` : 'svg';
     return [
       `${shape.type}#${shape.id}  parent=${parent}`,
       ...Object.entries(shape.attributes).map(([key, value]) => `  ${key}=${typeof value === 'string' ? JSON.stringify(value) : value}`),
