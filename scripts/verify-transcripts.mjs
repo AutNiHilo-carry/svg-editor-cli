@@ -48,14 +48,16 @@ function run(input, cwd, args) {
 
 function expected(name) { return join(transcriptDir, 'expected', `${name}.out`); }
 
+function normalize(text) { return text.replace(/\r\n/g, '\n'); }
+
 function compare(name, actual) {
   if (update) {
     writeFileSync(expected(name), actual, 'utf8');
     process.stdout.write(`updated ${name}\n`);
     return;
   }
-  const wanted = readFileSync(expected(name), 'utf8');
-  if (actual !== wanted) throw new Error(`${name} differs from ${expected(name)}`);
+  const wanted = normalize(readFileSync(expected(name), 'utf8'));
+  if (normalize(actual) !== wanted) throw new Error(`${name} differs from ${expected(name)}`);
   process.stdout.write(`ok ${name}\n`);
 }
 
