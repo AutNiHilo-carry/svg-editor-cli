@@ -58,6 +58,9 @@ test('box is a container with fill/label semantics, invariants, and round-trip',
   const dir = mkdtempSync(join(tmpdir(), 'svg-box-'));
   app.run('init 800 600');
   assert.equal(app.run('create box n1 120 100 160 60 "开始"'), 'box#n1 created');
+  const help = app.run('help')!;
+  assert.match(help, /create box <id> <x> <y> <w> <h>/);
+  assert.match(help, /create rect <id>/);
   const tree = app.run('tree')!;
   assert.match(tree, /g#n1 \(box\)/);
   assert.match(tree, /rect#n1-rect/);

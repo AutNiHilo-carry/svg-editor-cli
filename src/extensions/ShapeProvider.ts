@@ -11,6 +11,8 @@ export interface ShapeCreateRequest {
 export interface ShapeProvider {
   readonly type: string;
   readonly svgTag: string;
+  /** Help text for create, supplied by the plugin. */
+  readonly createUsage?: string;
   create(request: ShapeCreateRequest): Shape;
   /** Called after children and attributes were imported during `read`. */
   validateRestored?(shape: Shape): void;

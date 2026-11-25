@@ -7,7 +7,7 @@
 | `plugins/plugin-command-dir/src/NodeDirectoryAdapter.ts` | plugins | 16 | 5 | dir 命令插件与目录适配器 |
 | `plugins/plugin-command-dir/src/index.ts` | plugins | 4 | 1 | dir 命令插件与目录适配器 |
 | `plugins/plugin-command-stats/src/index.ts` | plugins | 44 | 11 | stats 命令插件 |
-| `plugins/plugin-shape-box/src/index.ts` | plugins | 87 | 31 | box 形状、属性处理器与 (box) 标签 |
+| `plugins/plugin-shape-box/src/index.ts` | plugins | 97 | 36 | box 形状、属性处理器与 (box) 标签 |
 | `plugins/plugin-tree-modified-star/src/index.ts` | plugins | 48 | 18 | modified-star 树标签 |
 | `src/application/CommandHistory.ts` | kernel | 39 | 8 | 文档会话、历史与结构查询 |
 | `src/application/DocumentInspector.ts` | kernel | 48 | 20 | 文档会话、历史与结构查询 |
@@ -53,7 +53,7 @@
 | `src/domain/Group.ts` | kernel | 23 | 10 | 领域模型：Group |
 | `src/domain/Line.ts` | kernel | 10 | 2 | 领域模型：Line |
 | `src/domain/Rect.ts` | kernel | 10 | 2 | 领域模型：Rect |
-| `src/domain/Shape.ts` | kernel | 113 | 59 | 领域模型：Shape |
+| `src/domain/Shape.ts` | kernel | 114 | 60 | 领域模型：Shape |
 | `src/domain/ShapeCollection.ts` | kernel | 54 | 26 | 领域模型：ShapeCollection |
 | `src/domain/ShapeContainer.ts` | kernel | 9 | 3 | 领域模型：ShapeContainer |
 | `src/domain/ShapeFactory.ts` | kernel | 21 | 9 | 领域模型：ShapeFactory |
@@ -82,11 +82,11 @@
 | `tests/cli.test.ts` | kernel | 150 | 16 | 源码 |
 | `tests/domain.test.ts` | kernel | 139 | 34 | 源码 |
 | `tests/history.test.ts` | kernel | 187 | 46 | 源码 |
-| `tests/plugin-features.test.ts` | kernel | 149 | 22 | 源码 |
+| `tests/plugin-features.test.ts` | kernel | 153 | 22 | 源码 |
 | `tests/plugin-loader.test.ts` | kernel | 113 | 17 | 源码 |
 | `tests/plugin-system.test.ts` | kernel | 86 | 13 | 源码 |
 | `tests/svg.test.ts` | kernel | 232 | 52 | 源码 |
 | `vscode-extension/src/decoration.ts` | vscode | 3 | 1 | VSCode 扩展 |
 | `vscode-extension/src/extension.ts` | vscode | 10 | 2 | VSCode 扩展 |
-| `vscode-extension/src/providers.ts` | vscode | 35 | 12 | VSCode 扩展 |
-| `vscode-extension/src/xmlOutline.ts` | vscode | 146 | 36 | VSCode 扩展 |
+| `vscode-extension/src/providers.ts` | vscode | 41 | 14 | VSCode 扩展 |
+| `vscode-extension/src/xmlOutline.ts` | vscode | 147 | 37 | VSCode 扩展 |

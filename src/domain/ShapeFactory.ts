@@ -19,6 +19,10 @@ export class ShapeFactory {
   public provider(type: string): ShapeProvider | undefined { return this.#providers.get(type); }
   public get types(): readonly string[] { return [...this.#providers.keys()]; }
 
+  public creationUsages(): string[] {
+    return [...this.#providers.values()].map(provider => provider.createUsage ?? `create ${provider.type} <id> ...`);
+  }
+
   public create(type: string, id: string, input: ShapeInput, mode: 'create' | 'restore' = 'create'): Shape {
     const provider = this.#providers.get(type);
     if (!provider) throw new Error(`unknown shape type: ${type} (is the plugin loaded?)`);

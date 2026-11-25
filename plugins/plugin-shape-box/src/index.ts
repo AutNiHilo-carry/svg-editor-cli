@@ -67,6 +67,7 @@ function createBox(id: string, input: ShapeInput): Box {
 const provider: ShapeProvider = {
   type: 'box',
   svgTag: 'g',
+  createUsage: 'create box <id> <x> <y> <w> <h> "title" [in <gid>]',
   create: ({ id, input, mode }) => mode === 'restore' ? new Box(id) : createBox(id, input),
   validateRestored: (shape) => {
     if (!(shape instanceof Box)) throw new Error(`invalid box: ${shape.id}`);

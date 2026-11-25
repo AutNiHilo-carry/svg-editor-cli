@@ -9,6 +9,7 @@ import { Text } from '../domain/Text.js';
 
 class RectProvider implements ShapeProvider {
   readonly type = 'rect';
+  readonly createUsage = 'create rect <id> <x> <y> <w> <h> [fill]';
   readonly svgTag = 'rect';
   create({ id, input }: { id: string; input: import('../domain/ShapeInput.js').ShapeInput }): Shape {
     input.expect(4, 5);
@@ -20,6 +21,7 @@ class RectProvider implements ShapeProvider {
 }
 class CircleProvider implements ShapeProvider {
   readonly type = 'circle';
+  readonly createUsage = 'create circle <id> <cx> <cy> <r> [fill]';
   readonly svgTag = 'circle';
   create({ id, input }: { id: string; input: import('../domain/ShapeInput.js').ShapeInput }): Shape {
     input.expect(3, 4);
@@ -31,6 +33,7 @@ class CircleProvider implements ShapeProvider {
 }
 class EllipseProvider implements ShapeProvider {
   readonly type = 'ellipse';
+  readonly createUsage = 'create ellipse <id> <cx> <cy> <rx> <ry> [fill]';
   readonly svgTag = 'ellipse';
   create({ id, input }: { id: string; input: import('../domain/ShapeInput.js').ShapeInput }): Shape {
     input.expect(4, 5);
@@ -42,6 +45,7 @@ class EllipseProvider implements ShapeProvider {
 }
 class LineProvider implements ShapeProvider {
   readonly type = 'line';
+  readonly createUsage = 'create line <id> <x1> <y1> <x2> <y2> [stroke]';
   readonly svgTag = 'line';
   create({ id, input }: { id: string; input: import('../domain/ShapeInput.js').ShapeInput }): Shape {
     input.expect(4, 5);
@@ -53,6 +57,7 @@ class LineProvider implements ShapeProvider {
 }
 class TextProvider implements ShapeProvider {
   readonly type = 'text';
+  readonly createUsage = 'create text <id> <x> <y> "content"';
   readonly svgTag = 'text';
   create({ id, input }: { id: string; input: import('../domain/ShapeInput.js').ShapeInput }): Shape {
     input.expect(3);
@@ -61,6 +66,7 @@ class TextProvider implements ShapeProvider {
 }
 class GroupProvider implements ShapeProvider {
   readonly type = 'g';
+  readonly createUsage = 'create g <id>';
   readonly svgTag = 'g';
   create({ id, input }: { id: string; input: import('../domain/ShapeInput.js').ShapeInput }): Shape {
     input.expect(0);

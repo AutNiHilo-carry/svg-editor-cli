@@ -40,7 +40,7 @@ const descriptors: readonly CommandDescriptor[] = [
   { name: 'save', syntax: SaveCommand.syntax, build: (args, services) => new SaveCommand(services.session, args) },
   { name: 'tree', syntax: TreeCommand.syntax, build: (args, services) => new TreeCommand(services.session, args, services.decorators) },
   { name: 'show', syntax: ShowCommand.syntax, build: (args, services) => new ShowCommand(services.session, args) },
-  { name: 'help', syntax: HelpCommand.syntax, build: (args, services) => new HelpCommand(args, services.dispatcher.syntaxes(), services.shapes.types) },
+  { name: 'help', syntax: HelpCommand.syntax, build: (args, services) => new HelpCommand(args, services.dispatcher.syntaxes(), services.shapes.creationUsages()) },
 ];
 
 export const builtinCommandDescriptors: readonly CommandDescriptor[] = descriptors;
