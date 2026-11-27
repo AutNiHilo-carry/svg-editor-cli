@@ -8,6 +8,7 @@ import { DocumentInspector } from '../src/application/DocumentInspector.js';
 import { FileDocumentStore } from '../src/infrastructure/FileDocumentStore.js';
 import { SvgCodec } from '../src/infrastructure/SvgCodec.js';
 import { EditorHarness } from './EditorHarness.js';
+import { createTestCodec, createTestStore } from './TestSystem.js';
 import { CanvasSnapshot } from '../src/domain/CanvasSnapshot.js';
 
 test('六种图形 SVG 往返保留层级、顺序、属性和需要 XML 转义的文本与 ID', () => {
@@ -18,7 +19,7 @@ test('六种图形 SVG 往返保留层级、顺序、属性和需要 XML 转义�
     'create line l 1 2 3 4 black', 'create text "t&<>" 5 6 "A & <B>" in scene',
     'set scene stroke-width 2', 'create g empty in scene',
   ]) editor.run(command);
-  const codec = new SvgCodec();
+  const codec = createTestCodec();
   const xml = codec.encode(editor.canvas);
   assert.match(xml, /&amp;/);
   assert.match(xml, /&lt;B&gt;/);
@@ -30,7 +31,7 @@ test('六种图形 SVG 往返保留层级、顺序、属性和需要 XML 转义�
 });
 
 test('缺 ID 自动分配预先避开全文已有 ID，重复 ID 拒绝', () => {
-  const codec = new SvgCodec();
+  const codec = createTestCodec();
   const loaded = codec.decode('<svg width="400" height="300"><rect/><rect id="rect1"/><g><rect/><text>Hi</text></g></svg>');
   assert.deepEqual(loaded.canvas.walk().map(shape => shape.id), ['rect2', 'rect1', 'g1', 'rect3', 'text1']);
   assert.deepEqual(loaded.warnings, [
@@ -44,7 +45,7 @@ test('缺 ID 自动分配预先避开全文已有 ID，重复 ID 拒绝', () => 
 });
 
 test('坏 XML、不支持的标签和非法数值明确报错，不静默丢弃', () => {
-  const codec = new SvgCodec();
+  const codec = createTestCodec();
   const sources = [
     '<svg><rect></svg>', '<html/>', '<svg><path d="M0 0"/></svg>',
     '<svg><text><tspan>unsupported</tspan></text></svg>', '<svg width="100%"/>',
@@ -63,7 +64,7 @@ test('保留 viewBox、transform 和字体等导入属性，编辑和撤销不�
   });
   const path = join(directory, 'import.svg');
   writeFileSync(path, '<svg id="root" width="400px" height="200" viewBox="10 20 800 400"><g id="g" transform="translate(60,40)"><rect id="r" width="10px" height="20"/><text id="t" x="60" y="38" text-anchor="middle" font-size="16">End</text></g></svg>');
-  const editor = new EditorHarness(new FileDocumentStore());
+  const editor = new EditorHarness(createTestStore());
   editor.run(`read "${path}"`);
   editor.run('move g 1 2');
   editor.run('undo');
@@ -76,7 +77,7 @@ test('保留 viewBox、transform 和字体等导入属性，编辑和撤销不�
   assert.deepEqual(editor.view(), before);
   assert.equal(editor.canvas.svgAttributes['viewBox'], '10 20 800 400');
   editor.run('save');
-  const reread = new SvgCodec().decode(readFileSync(path, 'utf8'));
+  const reread = createTestCodec().decode(readFileSync(path, 'utf8'));
   assert.equal(reread.canvas.svgAttributes['viewBox'], '10 20 800 400');
   assert.equal(reread.canvas.requireShape('t').attributes['font-size'], '16');
   editor.run('canvas 100 100');
@@ -93,7 +94,7 @@ test('真实文件读写、默认路径、失败原子性及 read/save 历史屏
   const path = join(directory, 'diagram with spaces.svg');
   const invalid = join(directory, 'bad.svg');
   writeFileSync(invalid, '<svg><path/></svg>');
-  const editor = new EditorHarness(new FileDocumentStore());
+  const editor = new EditorHarness(createTestStore());
   assert.throws(() => editor.run('save'), /no document/);
   editor.run('init');
   editor.run('create rect r 0 0 10 20');
@@ -144,7 +145,7 @@ test('tree 内联属性、子树连接线、show 父级与文本内容，查询�
 });
 
 test('作业外部 SVG 样例读入 7 个元素且只为缺失 ID 的矩形给出警告', () => {
-  const editor = new EditorHarness(new FileDocumentStore());
+  const editor = new EditorHarness(createTestStore());
   assert.equal(editor.run('read examples/other.svg'), 'warning: assigned id rect1 to unnamed <rect>\nread examples/other.svg (7 elements)');
   assert.equal(editor.canvas.width, 400);
   assert.equal(editor.canvas.height, 300);
@@ -168,7 +169,7 @@ test('完整流程图脚本回放，中文文本保真且实际为 8 个元素',
   assert.equal(result.stderr, '');
   assert.doesNotMatch(result.stdout, /^error:/m);
   assert.match(result.stdout, /saved to .*\(8 elements\)/);
-  const canvas = new SvgCodec().decode(readFileSync(path, 'utf8')).canvas;
+  const canvas = createTestCodec().decode(readFileSync(path, 'utf8')).canvas;
   assert.equal(canvas.walk().length, 8);
   assert.equal(canvas.requireShape('start-label').content, '开始');
   assert.equal(canvas.requireShape('process-label').content, '处理数据 v2');
@@ -176,7 +177,7 @@ test('完整流程图脚本回放，中文文本保真且实际为 8 个元素',
 });
 
 test('注释和 CDATA 中的 DOCTYPE 字样是普通内容，真正的文档类型仍拒绝', () => {
-  const codec = new SvgCodec();
+  const codec = createTestCodec();
   const comment = codec.decode('<svg><!-- 示例文字 <!DOCTYPE svg> --><rect id="r" width="10" height="20"/></svg>');
   assert.equal(comment.canvas.requireShape('r').type, 'rect');
   const loaded = codec.decode('<svg><text id="t"><![CDATA[示例 <!DOCTYPE html>]]></text></svg>');
@@ -187,7 +188,7 @@ test('注释和 CDATA 中的 DOCTYPE 字样是普通内容，真正的文档类�
 });
 
 test('SVG 的 px 描边宽度可读回，长度属性允许首尾空白且继续拒绝非法值', () => {
-  const codec = new SvgCodec();
+  const codec = createTestCodec();
   const loaded = codec.decode('<svg width="400" height="200"><g id="g" stroke-width="2px"><rect id="r" width="10" height="20" stroke="black" stroke-width="0.5px"/></g></svg>');
   assert.equal(loaded.canvas.requireShape('g').attributes['stroke-width'], 2);
   assert.equal(loaded.canvas.requireShape('r').attributes['stroke-width'], 0.5);
@@ -202,7 +203,7 @@ test('SVG 的 px 描边宽度可读回，长度属性允许首尾空白且继续
 });
 
 test('导入描边宽度 inherit 保留继承语义，保存读回及快照恢复不丢失', () => {
-  const codec = new SvgCodec();
+  const codec = createTestCodec();
   const canvas = codec.decode('<svg><g id="g" stroke="black" stroke-width="4px"><rect id="r" width="20" height="10" stroke-width=" inherit "/></g></svg>').canvas;
   assert.equal(canvas.requireShape('g').attributes['stroke-width'], 4);
   assert.equal(canvas.requireShape('r').attributes['stroke-width'], 'inherit');
@@ -216,7 +217,7 @@ test('导入描边宽度 inherit 保留继承语义，保存读回及快照恢�
 });
 
 test('文本中的回车字符实体在保存读回后不被改成换行', () => {
-  const codec = new SvgCodec();
+  const codec = createTestCodec();
   const canvas = codec.decode('<svg><text id="t">A&#13;B&#10;C&#9;D</text></svg>').canvas;
   assert.equal(canvas.requireShape('t').content, 'A\rB\nC\tD');
   const reread = codec.decode(codec.encode(canvas)).canvas;
@@ -230,7 +231,7 @@ test('非法 XML 文本保存失败，不覆盖已有文件，也不建立历史
     rmdirSync(directory);
   });
   const path = join(directory, 'document.svg');
-  const editor = new EditorHarness(new FileDocumentStore());
+  const editor = new EditorHarness(createTestStore());
   editor.run('init');
   editor.run('create rect r 0 0 10 20');
   editor.run(`save "${path}"`);

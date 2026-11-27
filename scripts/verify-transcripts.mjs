@@ -64,7 +64,12 @@ function compare(name, actual) {
 const dirs = [];
 try {
   const base = fixture('base'); dirs.push(base);
-  compare('cli-1', run(join(transcriptDir, 'cli-1.txt'), base, ['--no-plugins']));
+  const baseline = run(join(transcriptDir, 'cli-1.txt'), base, ['--no-plugins']);
+  compare('cli-1', baseline);
+  const baseConfig = fixture('base-config'); dirs.push(baseConfig);
+  const configuredBaseline = run(join(transcriptDir, 'cli-1.txt'), baseConfig, ['--config', join(transcriptDir, 'empty-plugins.json')]);
+  if (baseline !== configuredBaseline) throw new Error('cli-1: code/config baseline output differs');
+  process.stdout.write('ok cli-1 baseline dual assembly\n');
 
   for (const name of ['cli-box', 'cli-extra']) {
     const a = fixture(`${name}-a`); const b = fixture(`${name}-b`); dirs.push(a, b);

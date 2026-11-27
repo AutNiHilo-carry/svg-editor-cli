@@ -6,14 +6,13 @@ import { FiniteNumber } from '../domain/FiniteNumber.js';
 import { Group } from '../domain/Group.js';
 import { isShapeContainer } from '../domain/isShapeContainer.js';
 import { ShapeFactory } from '../domain/ShapeFactory.js';
-import { builtinShapeProviders } from '../builtin/BuiltinShapes.js';
 import type { Shape } from '../domain/Shape.js';
 import { XmlShapeInput } from './XmlShapeInput.js';
 import { SvgLength } from './SvgLength.js';
 
 export class SvgCodec {
   static readonly #namespace = 'http://www.w3.org/2000/svg';
-  public constructor(private readonly factory: ShapeFactory = new ShapeFactory(builtinShapeProviders)) {}
+  public constructor(private readonly factory: ShapeFactory) {}
 
   public decode(xml: string): LoadedDocument {
     try {

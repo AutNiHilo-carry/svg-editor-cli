@@ -1,5 +1,5 @@
 import { Group, Rect, Text, type Shape, type ShapeInput } from '../../../dist/index.js';
-import type { ShapeProvider } from '../../../dist/index.js';
+import type { AttributeHandler, ShapeProvider, TreeDecorator } from '../../../dist/index.js';
 
 export class Box extends Group {
   public override readonly type = 'box';
@@ -64,17 +64,47 @@ function createBox(id: string, input: ShapeInput): Box {
   return box;
 }
 
-const provider: ShapeProvider = {
-  type: 'box',
-  svgTag: 'g',
-  createUsage: 'create box <id> <x> <y> <w> <h> "title" [in <gid>]',
-  create: ({ id, input, mode }) => mode === 'restore' ? new Box(id) : createBox(id, input),
-  validateRestored: (shape) => {
+export class BoxShapeProvider implements ShapeProvider {
+  readonly type = 'box';
+  readonly svgTag = 'g';
+  readonly createUsage = 'create box <id> <x> <y> <w> <h> "title" [in <gid>]';
+
+  create({ id, input, mode }: Parameters<ShapeProvider['create']>[0]): Shape {
+    return mode === 'restore' ? new Box(id) : createBox(id, input);
+  }
+
+  validateRestored(shape: Shape): void {
     if (!(shape instanceof Box)) throw new Error(`invalid box: ${shape.id}`);
     shape.rect;
     shape.label;
-  },
-};
+  }
+}
+
+export class BoxAttributeHandler implements AttributeHandler {
+  readonly name = 'box-attributes';
+
+  handles(shape: Shape, attribute: string): boolean {
+    return shape instanceof Box && (attribute === 'fill' || attribute === 'label');
+  }
+
+  apply(shape: Shape, attribute: string, value: string): string {
+    const box = shape as Box;
+    if (attribute === 'fill') {
+      box.setFill(value);
+      return `${box.type}#${box.id} fill propagated to ${box.rect.id}`;
+    }
+    box.setLabel(value);
+    return `${box.type}#${box.id} label updated: ${JSON.stringify(value)}`;
+  }
+}
+
+export class BoxTypeDecorator implements TreeDecorator {
+  readonly name = 'box-type-label';
+
+  decorate({ shape }: Parameters<TreeDecorator['decorate']>[0]): string | null {
+    return shape?.type === 'box' ? '(box)' : null;
+  }
+}
 
 export const contributes = {
   shapes: ['box'],
@@ -87,20 +117,8 @@ export default {
   name: '@svgframe/plugin-shape-box',
   contributes,
   activate(context: import('../../../dist/index.js').PluginContext): void {
-    context.registerShape(provider);
-    context.registerAttribute({
-      name: 'box-attributes',
-      handles: (shape, attribute) => shape instanceof Box && (attribute === 'fill' || attribute === 'label'),
-      apply: (shape, attribute, value) => {
-        const box = shape as Box;
-        if (attribute === 'fill') { box.setFill(value); return `${box.type}#${box.id} fill propagated to ${box.rect.id}`; }
-        box.setLabel(value);
-        return `${box.type}#${box.id} label updated: ${JSON.stringify(value)}`;
-      },
-    });
-    context.registerDecorator({
-      name: 'box-type-label',
-      decorate: ({ shape }) => shape?.type === 'box' ? '(box)' : null,
-    });
+    context.registerShape(new BoxShapeProvider());
+    context.registerAttribute(new BoxAttributeHandler());
+    context.registerDecorator(new BoxTypeDecorator());
   },
 } satisfies import('../../../dist/index.js').SvgPlugin;

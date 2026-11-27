@@ -3,7 +3,17 @@ import { CommandDispatcher } from '../src/commands/CommandDispatcher.js';
 import { builtinCommandDescriptors } from '../src/builtin/BuiltinPlugin.js';
 import { builtinShapeProviders } from '../src/builtin/BuiltinShapes.js';
 import { ShapeFactory } from '../src/domain/ShapeFactory.js';
+import { SvgCodec } from '../src/infrastructure/SvgCodec.js';
+import { FileDocumentStore } from '../src/infrastructure/FileDocumentStore.js';
 import type { CommandServices } from '../src/extensions/CommandDescriptor.js';
+
+export function createTestCodec(): SvgCodec {
+  return new SvgCodec(new ShapeFactory(builtinShapeProviders));
+}
+
+export function createTestStore(): FileDocumentStore {
+  return new FileDocumentStore(createTestCodec());
+}
 
 /** Synchronous test composition root; production uses activatePlugin(). */
 export function createTestSystem(session: EditorSession): { dispatcher: CommandDispatcher; services: CommandServices } {

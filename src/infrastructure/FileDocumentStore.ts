@@ -7,7 +7,7 @@ import type { DocumentStore } from '../application/DocumentStore.js';
 import { SvgCodec } from './SvgCodec.js';
 
 export class FileDocumentStore implements DocumentStore {
-  public constructor(private readonly codec = new SvgCodec()) {}
+  public constructor(private readonly codec: SvgCodec) {}
 
   public read(path: string): LoadedDocument {
     let source: string;

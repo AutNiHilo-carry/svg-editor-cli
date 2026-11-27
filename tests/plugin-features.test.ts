@@ -111,6 +111,23 @@ test('modified-star uses content fingerprints, ancestors, save points, and undo'
   assert.match(dirty, /child .*\*$/m);
   app.run('undo');
   assert.equal(app.run('tree')!.includes('*'), false);
+  app.run('create rect fresh 20 20 5 5');
+  assert.match(app.run('tree')!, /rect#fresh .*\*$/m);
+  app.run('undo');
+  assert.equal(app.run('tree')!.includes('*'), false);
+});
+
+test('without decorators the tree matches the saved-star baseline', async () => {
+  const plain = await system();
+  const starred = await system(await pluginDefault('@svgframe/plugin-tree-modified-star'));
+  const dir = mkdtempSync(join(tmpdir(), 'svg-baseline-'));
+  for (const app of [plain, starred]) {
+    app.run('init 100 100');
+    app.run('create g group');
+    app.run('create rect child 0 0 10 10 in group');
+  }
+  starred.run(`save ${join(dir, 's.svg')}`);
+  assert.equal(starred.run('tree'), plain.run('tree'));
 });
 
 test('code assembly and config assembly produce byte-identical transcripts', async () => {
@@ -165,4 +182,50 @@ test('code assembly and config assembly produce byte-identical transcripts', asy
     writeFileSync(join(dir, 'a.txt'), 'x');
   }
   assert.deepEqual(await runMode('code', codeDir), await runMode('config', configDir));
+});
+
+
+test('two matching attribute handlers are rejected without changing history', async () => {
+  const handler = {
+    name: 'h1',
+    handles: (shape: any, attr: string) => shape.type === 'rect' && attr === 'fill',
+    apply: () => 'wrong',
+  };
+  const plugin = {
+    name: 'attribute-conflict',
+    contributes: { attributes: ['h1', 'h2'] },
+    activate(ctx: any) {
+      ctx.registerAttribute(handler);
+      ctx.registerAttribute({ ...handler, name: 'h2' });
+    },
+  };
+  const app = await system(plugin);
+  app.run('init 100 100');
+  app.run('create rect r 0 0 10 10');
+  assert.throws(() => app.run('set r fill red'), /ambiguous attribute handler: fill/);
+  assert.equal(app.session.requireCanvas().requireShape('r').attributes.fill, undefined);
+  assert.match(app.run('undo')!, /^undone: rect#r created/);
+});
+
+test('a handler that changes a child and then throws rolls back the whole set', async () => {
+  const plugin = {
+    name: 'attribute-partial',
+    contributes: { attributes: ['partial'] },
+    activate(ctx: any) {
+      ctx.registerAttribute({
+        name: 'partial',
+        handles: (shape: any, attr: string) => shape.type === 'rect' && attr === 'fill',
+        apply: (shape: any) => {
+          shape.setAttribute('fill', 'red');
+          throw new Error('partial failure');
+        },
+      });
+    },
+  };
+  const app = await system(plugin);
+  app.run('init 100 100');
+  app.run('create rect r 0 0 10 10');
+  assert.throws(() => app.run('set r fill red'), /partial failure/);
+  assert.equal(app.session.requireCanvas().requireShape('r').attributes.fill, undefined);
+  assert.match(app.run('undo')!, /^undone: rect#r created/);
 });

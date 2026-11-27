@@ -229,7 +229,7 @@ npm.cmd run visual:check
 | 扩展点 | 接口/注册表 | 内核调用位置 | 已有实现 | 未加载可选插件时 | 违约时 |
 |---|---|---|---|---|---|
 | `ShapeProvider` | `ShapeProvider.ts`，`ShapeFactory.register/create` | `CreateCommand.apply`、`SvgCodec.decodeShape` | `BuiltinShapes.ts` 六种；`box` | 六种内置图形仍可用；`box` 报 `unknown shape type: box (is the plugin loaded?)` | id 冲突由 `ShapeCollection.insert` 拒绝；读回缺必要子部件抛 `invalid SVG`；provider 返回错误 id 拒绝 |
-| `Command` | `CommandDescriptor.ts`，`CommandDispatcher.register/dispatch` | `CommandDispatcher.dispatch` | 17 个内置命令；`stats`、`dir` | 内置命令不变；未加载时报 `unknown command: stats/dir` | 同名注册抛 `duplicate registration: commands/<name>` |
+| `Command` | `CommandDescriptor.ts`，`CommandDispatcher.register/dispatch` | `CommandDispatcher.dispatch` | 19 个内置命令；`stats`、`dir` | 内置命令不变；未加载时报 `unknown command: stats/dir` | 同名注册抛 `duplicate registration: commands/<name>` |
 | `TreeDecorator` | `TreeDecorator.ts`，`PluginRegistry.registerDecorator` | `DocumentInspector.tags` | `(box)`、`modified-star` | 树输出与 Phase 1 完全一致，无标签 | 重复名拒绝；装饰器抛错由命令边界转成一行 `error:` |
 | `AttributeHandler` | `AttributeHandler.ts`，`PluginRegistry.registerAttribute` | `SetCommand.apply` | box 的 `fill`、`label` | 回退 Phase 1 白名单；未知属性报 `unknown attribute` | 多个命中拒绝 `ambiguous attribute handler`；`apply` 抛错由 `SnapshotEdit` 整体回滚 |
 
@@ -359,7 +359,7 @@ node dist/main.js --no-plugins   # 对照 Phase 1
 - 实际目录与方案一致：扩展点位于 `src/extensions`，装配位于 `src/host`，插件位于 `plugins/*`，VSCode 扩展独立于 `vscode-extension/`。
 - 依赖方向：`src/extensions` 不导入 `plugins` 或 `vscode`；`src/host` 依赖扩展点；插件只依赖 `svg-editor-cli` 的公开 barrel 和 Node 标准库。
 - `--no-plugins` 的 Phase 1 transcript 已逐字节对比通过。
-- 测试：Phase 1 回归、`stats`/`dir`、loader 6 条、box 不变量与 round-trip、`modified-star` 状态机、代码/配置装配逐字节一致、VSCode outline 5 条。
-- 指标：见 `docs/metrics/`，数字由 `scripts/metrics.mjs` 从 `final..HEAD` 生成。
+- 测试：Phase 1 回归、`stats`/`dir`、loader 6 条、box 不变量与 round-trip、属性处理器冲突/部分失败回滚、`modified-star` 状态机、代码/配置装配逐字节一致、VSCode outline 7 条。
+- 指标：见 `docs/metrics/`，数字由 `scripts/metrics.mjs` 从 `final..p2` 生成。
 
-真实 VSCode 截图需要在有 GUI 的桌面环境运行 `vscode-extension` 后补入 `docs/images/`；本沙箱禁止 Electron 创建 named pipe，无法在此生成可信截图，未使用伪造图片。
+VSCode 真实运行截图见 `docs/images/vscode-svg-badge.png` 与 `docs/images/vscode-svg-outline.png`：前者显示 Explorer 的 `[]` 标记，后者显示文本编辑器中的原生 Outline 与 `rect#start` 定位。
